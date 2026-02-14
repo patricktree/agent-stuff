@@ -5,15 +5,17 @@ description: CLI to interact with Chrome Devtools (CDP). Use to automate browser
 
 ## Setup (once per machine)
 
-Register the server in the home-scoped mcporter config:
+Register the server in the home-scoped mcporter config with **headless Chrome** by default:
 
 ```bash
 npx -y mcporter config add chrome-devtools \
-  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@latest" \
+  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@latest" --arg "--headless" \
   --scope home
 ```
 
 This writes to `~/.mcporter/mcporter.json`. Only needed once.
+
+Use headless mode (`--headless`) unless you specifically need to see the browser window (e.g. for visual debugging). Headless is faster, uses less resources, and works in environments without a display.
 
 ## Session lifecycle
 
@@ -115,9 +117,10 @@ npx -y mcporter call chrome-devtools.list_console_messages includePreservedMessa
 
 ## Notes
 
-- The daemon launches a **standalone Chrome** (with debugging pre-enabled) — no dialogs.
-- If Chrome from a previous session is still running, kill it first:
+- The daemon launches a **headless standalone Chrome** by default — no window, no dialogs.
+- After changing the config (e.g. adding `--headless`), you must kill any existing Chrome and restart the daemon:
   `pkill -f "chrome-devtools-mcp/chrome-profile"` then `npx -y mcporter daemon restart --log`.
+- If Chrome from a previous session is still running, use the same kill + restart sequence.
 - If the user asks to connect to their **own Chrome**, re-add with `--arg "--autoConnect"`.
   This requires Chrome 144+ with remote debugging enabled via `chrome://inspect/#remote-debugging`.
   Each new daemon start may trigger one permission dialog.
