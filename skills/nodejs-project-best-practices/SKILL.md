@@ -45,7 +45,7 @@ pnpm --version # must print the latest version
   "private": true,
   "type": "module",
   "imports": {
-    "#pkg/*": "./src/*"
+    "#pkg/*": "./dist/*"
   },
   "exports": {
     ".": null,
