@@ -9,11 +9,13 @@ Register the server in the home-scoped mcporter config with **headless Chrome** 
 
 ```bash
 npx -y mcporter config add chrome-devtools \
-  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@latest" --arg "--headless" \
+  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@0.17.1" --arg "--headless" \
   --scope home
 ```
 
 This writes to `~/.mcporter/mcporter.json`. Only needed once.
+
+> **Pin the version!** Always use a specific version (currently `0.17.1`). The `@latest` tag has shipped broken builds in the past (e.g. `0.17.2` was missing its `build/` directory).
 
 Use headless mode (`--headless`) unless you specifically need to see the browser window (e.g. for visual debugging). Headless is faster, uses less resources, and works in environments without a display.
 
