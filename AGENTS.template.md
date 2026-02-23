@@ -8,6 +8,7 @@
 ## Guardrails
 
 - Use `trash` for deletes.
+- Never run `sleep` with a value greater than 120 (2 min).
 
 ## Startup Checklist
 
@@ -16,7 +17,7 @@
 
 ## Build / Test
 
-- Run full validation (lint/typecheck/tests/docs/format) when you think you are finished.
+- Run full validation (format → build → typecheck → lint → tests) when you think you are finished.
 - Keep it observable (logs, panes, tails, MCP/browser tools).
 - Prefer end-to-end verify; if blocked, say what’s missing.
 
@@ -64,3 +65,4 @@
 ### tmux
 
 - Use only when you need persistence/interaction (debugger/server).
+- Never background long-running processes (e.g. dev servers) with `&` inside a `bash` tool call — the tool waits for all child processes, so it will hang indefinitely. Use tmux instead.
