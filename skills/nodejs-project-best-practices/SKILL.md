@@ -34,7 +34,7 @@ pnpm --version # must print the latest version
 - Compile TypeScript with `tsc` (project build). No `tsx`, `bun`, `ts-node`, `jiti`, or similar runtime transpilers.
 - Run compiled output with `node` (target `dist/`).
 - For dev loop: `tsc --watch` + `node --watch dist/index.js` (or a file watcher on JS output).
-- Keep `outDir` in `tsconfig.json` and wire `package.json` scripts to `tsc` then `node`.
+- Use `outDir` in TypeScript config and wire `package.json` scripts to `tsc` then `node`.
 - Entry points reference JS output only (no `.ts` in runtime).
 
 ## package.json Base
@@ -110,6 +110,21 @@ module.exports = {
 
 ### Base Config
 
+`tsconfig.json`:
+
+```json
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.build.json"
+    }
+  ]
+}
+```
+
+`tsconfig.build.json`:
+
 ```json
 {
   /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults */
@@ -154,7 +169,38 @@ module.exports = {
 }
 ```
 
-- for Node.js projects, add `"node"` to `tsconfig.json#compilerOptions.types`
+- for Node.js projects, add `"node"` to `compilerOptions.types`
+
+### Additional tsconfig files (e.g. E2E tests)
+
+When a project has files outside `src/` that import from `src/` (e.g. E2E tests in `tests/`, a `playwright.config.ts`), create a separate tsconfig that **references** `tsconfig.build.json` instead of duplicating `src` in its `include`. This way TypeScript resolves imports into `src/` through the project reference rather than re-including the source files.
+
+Example `tsconfig.e2e.json`:
+
+```jsonc
+{
+  "compilerOptions": {
+    // same base options as tsconfig.build.json, but:
+    "noEmit": true,
+    "composite": true,
+  },
+  "include": ["tests", "playwright.config.ts"],
+  "exclude": ["**/node_modules"],
+  "references": [{ "path": "./tsconfig.build.json" }],
+}
+```
+
+Add it to the root `tsconfig.json` references:
+
+```jsonc
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.e2e.json" },
+  ],
+}
+```
 
 ### Key rules
 
