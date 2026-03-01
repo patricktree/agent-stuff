@@ -14,6 +14,7 @@
 
 - If file `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once/session.
 - Before running `pnpm` commands run `corepack enable` once/session.
+- Authenticate `gh` as bot: `export GH_TOKEN=$(~/scripts/gh-app-token.sh)` once/session.
 
 ## Build / Test
 
@@ -23,8 +24,11 @@
 
 ## Git
 
-- Commit Messages: Conventional Commits (`feat|fix|refactor|build|ci|chore|docs|style|perf|test`).
-- Safe by default: `git status/diff/log`. Before commit or amend, ask. Push only when user asks.
+- Commit Messages
+  - Conventional Commits (`feat|fix|refactor|build|ci|chore|docs|style|perf|test`).
+  - Append this trailer to every commit message (empty line before the trailer):
+    `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`
+- Safe by default: `git status/diff/log`. **Never commit, amend, or push unless the user explicitly asks.** No auto-commits after checks pass, no "let me commit this" — wait for the user to say "commit", "commit and push", etc.
 - `git checkout` ok for PR review / explicit request.
 - Branch changes require user consent.
 - Destructive ops forbidden unless explicit (`reset --hard`, `clean`, `restore`, `rm`, …).
