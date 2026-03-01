@@ -4,7 +4,7 @@ Shared configuration for AI coding agents — one source of truth for instructio
 
 ## Problem
 
-Multiple AI coding agents (Claude Code, Codex, pi, GitHub Copilot) each look for instructions and skills in their own directory under `~/` (`.claude/`, `.codex/`, `.pi/`, `.github/`). Maintaining identical configuration across all of them by hand is tedious and error-prone.
+Multiple AI coding agents (Claude Code, Codex, pi, GitHub Copilot) each look for instructions and skills in their own directory under `~/` (`.claude/`, `.codex/`, `.agents/`, `.github/`). Maintaining identical configuration across all of them by hand is tedious and error-prone.
 
 ## Solution
 
@@ -43,11 +43,7 @@ This repo is the **single source of truth** for my `AGENTS.md` file and custom s
 │   ├── AGENTS.md                     # copied from AGENTS.template.md
 │   └── skills ----------------------> ~/.agents/skills
 │
-├── .github/
-│   ├── AGENTS.md                     # copied from AGENTS.template.md
-│   └── skills ----------------------> ~/.agents/skills
-│
-└── .pi/
+└── .github/
     ├── AGENTS.md                     # copied from AGENTS.template.md
     └── skills ----------------------> ~/.agents/skills
 ```
