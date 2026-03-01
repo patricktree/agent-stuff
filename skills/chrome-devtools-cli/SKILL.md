@@ -21,45 +21,67 @@ Use headless mode (`--headless`) unless you specifically need to see the browser
 
 ## Session lifecycle
 
-Start the daemon so chrome-devtools-mcp stays running (single CDP connection → **no repeated permission dialogs**):
+Each agent session gets its own isolated daemon and Chrome instance via a
+session-scoped config directory. This prevents parallel agents from interfering
+with each other (navigating each other's pages, taking wrong screenshots, etc.).
+
+### Start a session
+
+Create a temporary config that points to the global server definition, then
+start a daemon scoped to that config:
 
 ```bash
-npx -y mcporter daemon start --log
+MCPORTER_SESSION_DIR=$(mktemp -d -t mcporter-session-XXXXXX)
+cp ~/.mcporter/mcporter.json "$MCPORTER_SESSION_DIR/mcporter.json"
+MCPORTER_CONFIG="$MCPORTER_SESSION_DIR/mcporter.json"
+
+npx -y mcporter --config "$MCPORTER_CONFIG" daemon start --log
 ```
 
-Check status / stop:
+**You must pass `--config "$MCPORTER_CONFIG"` on every `mcporter` call for the
+rest of this session.** All examples below include it.
+
+### Check status
 
 ```bash
-npx -y mcporter daemon status
-npx -y mcporter daemon stop
+npx -y mcporter --config "$MCPORTER_CONFIG" daemon status
+```
+
+### Stop and clean up
+
+Always stop the daemon when you are done:
+
+```bash
+npx -y mcporter --config "$MCPORTER_CONFIG" daemon stop
+rm -rf "$MCPORTER_SESSION_DIR"
 ```
 
 ## Calling tools
 
-With the daemon running, every call reuses the persistent server:
+With the session daemon running, every call reuses the persistent server:
 
 ```bash
 # List available tools
-npx -y mcporter list chrome-devtools
+npx -y mcporter --config "$MCPORTER_CONFIG" list chrome-devtools
 
 # Open a page
-npx -y mcporter call chrome-devtools.new_page url=https://example.com
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.new_page url=https://example.com
 
 # Take an accessibility snapshot (saves to file)
-npx -y mcporter call chrome-devtools.take_snapshot filePath=/tmp/snapshot.md
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_snapshot filePath=/tmp/snapshot.md
 
 # Select a different tab
-npx -y mcporter call chrome-devtools.list_pages
-npx -y mcporter call chrome-devtools.select_page pageId=2
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.list_pages
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.select_page pageId=2
 
 # Wait for text to appear
-npx -y mcporter call chrome-devtools.wait_for text="Hello" timeout=5000
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.wait_for text="Hello" timeout=5000
 
 # Evaluate JS in the page
-npx -y mcporter call chrome-devtools.evaluate_script 'function=() => document.title'
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script 'function=() => document.title'
 
 # Screenshot
-npx -y mcporter call chrome-devtools.take_screenshot filePath=/tmp/shot.png fullPage=true
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/shot.png fullPage=true
 ```
 
 ## Mobile / smartphone testing recipe
@@ -67,7 +89,7 @@ npx -y mcporter call chrome-devtools.take_screenshot filePath=/tmp/shot.png full
 Use `emulate` to switch to a touch + mobile viewport and UA:
 
 ```bash
-npx -y mcporter call chrome-devtools.emulate \
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.emulate \
   viewport='{"width":390,"height":844,"deviceScaleFactor":3,"isMobile":true,"hasTouch":true}' \
   userAgent='Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
 ```
@@ -75,7 +97,7 @@ npx -y mcporter call chrome-devtools.emulate \
 Verify the page sees mobile-like input capabilities:
 
 ```bash
-npx -y mcporter call chrome-devtools.evaluate_script 'function=() => ({
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script 'function=() => ({
   innerWidth: window.innerWidth,
   innerHeight: window.innerHeight,
   coarse: window.matchMedia("(pointer: coarse)").matches,
@@ -87,8 +109,8 @@ npx -y mcporter call chrome-devtools.evaluate_script 'function=() => ({
 Then reload and capture screenshots:
 
 ```bash
-npx -y mcporter call chrome-devtools.navigate_page type=reload ignoreCache=true timeout=10000
-npx -y mcporter call chrome-devtools.take_screenshot filePath=/tmp/mobile-before.png
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.navigate_page type=reload ignoreCache=true timeout=10000
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/mobile-before.png
 ```
 
 ## Interacting with Shadow DOM UIs
@@ -96,7 +118,7 @@ npx -y mcporter call chrome-devtools.take_screenshot filePath=/tmp/mobile-before
 For apps that render controls inside a shadow root (e.g. `<pi-web-app>`), `evaluate_script` is often the easiest way to set input and click buttons:
 
 ```bash
-npx -y mcporter call chrome-devtools.evaluate_script 'function=() => {
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script 'function=() => {
   const app = document.querySelector("pi-web-app");
   const root = app?.shadowRoot;
   const prompt = root?.getElementById("prompt");
@@ -113,16 +135,38 @@ After sending, wait and capture:
 
 ```bash
 sleep 8
-npx -y mcporter call chrome-devtools.take_screenshot filePath=/tmp/mobile-after.png
-npx -y mcporter call chrome-devtools.list_console_messages includePreservedMessages=true
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/mobile-after.png
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.list_console_messages includePreservedMessages=true
 ```
 
 ## Notes
 
 - The daemon launches a **headless standalone Chrome** by default — no window, no dialogs.
-- After changing the config (e.g. adding `--headless`), you must kill any existing Chrome and restart the daemon:
-  `pkill -f "chrome-devtools-mcp/chrome-profile"` then `npx -y mcporter daemon restart --log`.
-- If Chrome from a previous session is still running, use the same kill + restart sequence.
+- Each `--config` path produces a separate daemon (unique socket), so parallel sessions are fully isolated.
+- After changing the global config (e.g. adding `--headless`), you must kill any existing Chrome and restart the daemon:
+  `pkill -f "chrome-devtools-mcp/chrome-profile"` then restart with `daemon restart --log`.
 - If the user asks to connect to their **own Chrome**, re-add with `--arg "--autoConnect"`.
   This requires Chrome 144+ with remote debugging enabled via `chrome://inspect/#remote-debugging`.
   Each new daemon start may trigger one permission dialog.
+
+## Cleaning up orphaned processes
+
+If a session ended without running `daemon stop` (e.g. agent crash, timeout),
+the daemon and Chrome processes keep running. To find and kill them:
+
+```bash
+# List orphaned mcporter daemons
+pgrep -fa mcporter
+
+# List orphaned Chrome instances launched by chrome-devtools-mcp
+pgrep -fa "chrome-devtools-mcp/chrome-profile"
+
+# Kill all orphaned mcporter daemons
+pkill -f "mcporter.*daemon"
+
+# Kill all orphaned Chrome instances from chrome-devtools-mcp
+pkill -f "chrome-devtools-mcp/chrome-profile"
+
+# Remove leftover session config directories
+rm -rf /tmp/mcporter-session-*
+```
