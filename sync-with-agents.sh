@@ -8,6 +8,7 @@ AGENTS_DIR="${HOME}/.agents"
 CLAUDE_DIR="${HOME}/.claude"
 CODEX_DIR="${HOME}/.codex"
 GITHUB_DIR="${HOME}/.github"
+PI_DIR="${HOME}/.pi/agent"
 
 # --- Collect all skill source repos: this repo + any extras passed as args ---
 SKILL_SOURCES=("${SCRIPT_DIR}/skills")
@@ -20,7 +21,7 @@ for arg in "$@"; do
 done
 
 # --- Build AGENTS.md: base + optional platform additions from extra repos ---
-mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${GITHUB_DIR}"
+mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${GITHUB_DIR}" "${PI_DIR}"
 
 AGENTS_CONTENT=$(mktemp)
 cp "${SCRIPT_DIR}/AGENTS.template.md" "${AGENTS_CONTENT}"
@@ -35,6 +36,7 @@ cp "${AGENTS_CONTENT}" "${AGENTS_DIR}/AGENTS.md"
 cp "${AGENTS_CONTENT}" "${CLAUDE_DIR}/CLAUDE.md"
 cp "${AGENTS_CONTENT}" "${CODEX_DIR}/AGENTS.md"
 cp "${AGENTS_CONTENT}" "${GITHUB_DIR}/AGENTS.md"
+cp "${AGENTS_CONTENT}" "${PI_DIR}/AGENTS.md"
 rm -f "${AGENTS_CONTENT}"
 
 # --- Symlink skills from all sources ---
@@ -51,9 +53,8 @@ for source_dir in "${SKILL_SOURCES[@]}"; do
 done
 
 # --- Symlink agent skill dirs to central ---
-rm -rf "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_DIR}/skills"
+rm -rf "${CLAUDE_DIR}/skills" "${GITHUB_DIR}/skills"
 ln -s "${CENTRAL_SKILLS_DIR}" "${CLAUDE_DIR}/skills"
-ln -s "${CENTRAL_SKILLS_DIR}" "${CODEX_DIR}/skills"
 ln -s "${CENTRAL_SKILLS_DIR}" "${GITHUB_DIR}/skills"
 
 echo "Synced skills from ${#SKILL_SOURCES[@]} source(s)"

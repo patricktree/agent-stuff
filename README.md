@@ -4,7 +4,7 @@ Universal configuration for AI coding agents — one source of truth for instruc
 
 ## Problem
 
-Multiple AI coding agents (Claude Code, Codex, pi, GitHub Copilot) each look for instructions and skills in their own directory under `~/` (`.claude/`, `.codex/`, `.agents/`, `.github/`). Maintaining identical configuration across all of them by hand is tedious and error-prone.
+Multiple AI coding agents (Claude Code, Codex, pi, GitHub Copilot) each look for instructions and skills in their own directory under `~/` (`.claude/`, `.codex/`, `.pi/`, `.github/`). Maintaining identical configuration across all of them by hand is tedious and error-prone.
 
 ## Solution
 
@@ -46,12 +46,15 @@ The `~/.agents/` directory is the **central hub** on each machine — also a git
 │   └── skills ----------------------> ~/.agents/skills
 │
 ├── .codex/
+│   └── AGENTS.md                     # copied from template(s) (skills read from ~/.agents)
+│
+├── .github/
 │   ├── AGENTS.md                     # copied from template(s)
 │   └── skills ----------------------> ~/.agents/skills
 │
-└── .github/
-    ├── AGENTS.md                     # copied from template(s)
-    └── skills ----------------------> ~/.agents/skills
+└── .pi/
+    └── agent/
+        └── AGENTS.md                 # copied from template(s) (skills read from ~/.agents)
 ```
 
 ## How it works
@@ -62,7 +65,7 @@ The setup has two layers of symlinks:
    Each skill directory from the universal repo (and any device-specific repos) is symlinked into `~/.agents/skills/`. This merges all custom skills with any third-party skills already installed there.
 
 2. **Agent directories → central hub.**
-   Each agent's `skills` path (`~/.claude/skills`, `~/.codex/skills`, etc.) is a symlink pointing to `~/.agents/skills/`. Every agent therefore sees the full, merged skill set without any duplication.
+   Each agent's `skills` path (`~/.claude/skills`, `~/.github/skills`, etc.) is a symlink pointing to `~/.agents/skills/`. Every agent therefore sees the full, merged skill set without any duplication.
 
 The instructions file (`AGENTS.template.md`) is **copied** (not symlinked) into each agent directory because some agents expect a specific filename (`CLAUDE.md` for Claude Code, `AGENTS.md` for the others). If a device-specific repo also has an `AGENTS.template.md`, its contents are appended.
 
