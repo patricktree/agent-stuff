@@ -42,6 +42,9 @@ rm -f "${AGENTS_CONTENT}"
 # --- Symlink skills from all sources ---
 mkdir -p "${CENTRAL_SKILLS_DIR}"
 
+# Remove stale/dangling symlinks before re-syncing
+find "${CENTRAL_SKILLS_DIR}" -maxdepth 1 -type l ! -exec test -e {} \; -delete
+
 for source_dir in "${SKILL_SOURCES[@]}"; do
   for skill_dir in "${source_dir}"/*/; do
     [[ -d "${skill_dir}" ]] || continue
