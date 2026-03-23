@@ -5,6 +5,10 @@
 - Contact: Patrick Kerschbaum (website <https://patricktree.me>, email <patrick.kerschbaum@gmail.com>, X `@patricktree_`, GitHub `patricktree`, Bluesky `patricktree.me`).
 - Workspace: `~/workspace`
 
+## Skills & Prompt Templates
+
+Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agent-stuff/README.md`. Skills and prompt templates are centrally managed — the files you see in `~/.claude/`, `~/.pi/`, `~/.github/`, or `~/.agents/` are **synced copies or symlinks**, not the source of truth. Edits must be made in the canonical source repos (`~/workspace/agent-stuff/` or a device-specific repo) and then synced via `sync-with-agents.sh`.
+
 ## Guardrails
 
 - Use `trash` for deletes.
