@@ -24,25 +24,13 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 
 - Run full validation (format → build → typecheck → lint → tests) when you think you are finished.
 - Keep it observable (logs, panes, tails, MCP/browser tools).
-- Prefer end-to-end verify; if blocked, say what’s missing.
+- Prefer end-to-end verify; if blocked, say what's missing.
 
 ## Git
 
-- Commit Messages
-  - Conventional Commits (`feat|fix|refactor|build|ci|chore|docs|style|perf|test`).
-  - Append this trailer to every commit message (empty line before the trailer):
-    `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`
-- Safe by default: `git status/diff/log`. **Never commit, amend, or push unless the user explicitly asks.** No auto-commits after checks pass, no "let me commit this" — wait for the user to say "commit", "commit and push", etc.
-- `git checkout` ok for PR review / explicit request.
-- Branch changes require user consent.
-- Destructive ops forbidden unless explicit (`reset --hard`, `clean`, `restore`, `rm`, …).
+- **Never commit, amend, or push unless the user explicitly asks.**
 - Remotes under `~/workspace`.
-- Don’t delete/rename unexpected stuff; stop + ask.
-- Avoid manual `git stash`; if Git auto-stashes during pull/rebase, that’s fine (hint, not hard guardrail).
-- Review the last 30 commit messages before constructing a commit message.
-- If user types a command (“pull and push”), that’s consent for that command.
-- Big review: `git --no-pager diff --color=never`.
-- Multi-agent: check `git status/diff` before edits; ship small commits.
+- Use the `commit` skill for all commit message formatting, safe git practices, and workflow rules.
 
 ## Coding Style Notes
 
