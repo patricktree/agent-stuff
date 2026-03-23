@@ -1,43 +1,11 @@
 ---
 name: nodejs-project-best-practices
-description: "Best practices for Node.js project setup, build pipeline, and tooling. Use when designing or editing package.json, pnpm config, ESLint, Prettier, Vitest, .gitignore, build scripts, or the tsc+node build pipeline. Not for tsconfig setup or TypeScript compiler options — see typescript."
+description: "Best practices for Node.js project setup, package metadata, linting, formatting, testing, and repository tooling. Use when designing or editing package.json, ESLint, Prettier, Vitest, .gitignore, or general Node.js project conventions. Not for pnpm config or TypeScript build/tsconfig setup — see pnpm and typescript-project-setup."
 ---
 
 # Nodejs Project Best Practices
 
-> **PREREQUISITE:** Load the following skill for TypeScript configuration details (tsconfig, project references, import conventions): `typescript`
-
-## Package Manager (pnpm)
-
-- Use **pnpm** with Corepack.
-- Use `pnpm dlx` instead of `npx` to run one-off packages (e.g. `pnpm dlx create-next-app`).
-- Set `package.json#packageManager` and `package.json#engines.pnpm` to the latest pnpm version.
-
-Find latest pnpm version via `npm view pnpm version`.
-
-```json
-{
-  "packageManager": "pnpm@<latest-version>",
-  "engines": {
-    "pnpm": "<latest-version>"
-  }
-}
-```
-
-Corepack setup:
-
-```bash
-corepack enable
-pnpm --version # must print the latest version
-```
-
-## TypeScript Build Pipeline
-
-- Compile TypeScript with `tsc` (project build). No `tsx`, `bun`, `ts-node`, `jiti`, or similar runtime transpilers.
-- Run compiled output with `node` (target `dist/`).
-- For dev loop: `tsc --watch` + `node --watch dist/index.js` (or a file watcher on JS output).
-- Use `outDir` in TypeScript config and wire `package.json` scripts to `tsc` then `node`.
-- Entry points reference JS output only (no `.ts` in runtime).
+> **PREREQUISITE:** Load the following skills as needed: `pnpm` for package-manager and workspace configuration, `typescript-project-setup` for TypeScript build and tsconfig guidance.
 
 ## package.json Base
 
@@ -69,25 +37,6 @@ pnpm --version # must print the latest version
 - change `package.json#exports` if the package exports things
   - e.g. `{ ".": "./dist/index.js", "./*": null }`
 - use the `package.json#imports` instead of `tsconfig.json#compilerOptions.paths` or bundler-specific aliases (e.g. Vite `resolve.alias`)
-
-## `pnpm-workspace.yaml` (pnpm settings)
-
-```yaml
-# enforce specific Node.js and pnpm version (https://pnpm.io/npmrc#engine-strict)
-engineStrict: true
-
-# handle peer dependencies in a strict way
-autoInstallPeers: false
-dedupePeerDependents: false
-strictPeerDependencies: true
-resolvePeersFromWorkspaceRoot: false
-
-# https://pnpm.io/npmrc#update-notifier
-updateNotifier: false
-
-# workspace-concurrency=0 will use amount of cores of the host to run tasks concurrently (see https://pnpm.io/cli/recursive#--workspace-concurrency)
-workspaceConcurrency: 0
-```
 
 ## Prettier Setup
 

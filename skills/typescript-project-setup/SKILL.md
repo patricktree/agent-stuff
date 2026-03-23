@@ -1,9 +1,17 @@
 ---
-name: typescript
+name: typescript-project-setup
 description: "TypeScript project configuration: tsconfig setup, compiler options, project references, and import conventions. Use when creating or editing tsconfig files, configuring project references, setting compiler options, troubleshooting module resolution, or fixing import path issues. Not for type-level programming (generics, utility types) — see typescript-magician."
 ---
 
-# TypeScript
+# TypeScript Project Setup
+
+## Build Pipeline
+
+- Compile TypeScript with `tsc` (project build). No `tsx`, `bun`, `ts-node`, `jiti`, or similar runtime transpilers.
+- Run compiled output with `node` (target `dist/`).
+- For dev loop: `tsc --watch` + `node --watch dist/index.js` (or a file watcher on JS output).
+- Use `outDir` in TypeScript config and wire `package.json` scripts to `tsc` then `node`.
+- Entry points reference JS output only (no `.ts` in runtime).
 
 ## Base Config
 
