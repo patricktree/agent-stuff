@@ -1,9 +1,11 @@
 ---
 name: nodejs-project-best-practices
-description: "Best practices for Node.js + TypeScript project setup, build, and runtime execution. Use when designing or editing Node/TS tooling, scripts, package.json, linting, formatting, build pipelines, or when asked for TypeScript execution guidance."
+description: "Best practices for Node.js project setup, build pipeline, and tooling. Use when designing or editing package.json, pnpm config, ESLint, Prettier, Vitest, .gitignore, build scripts, or the tsc+node build pipeline. Not for tsconfig setup or TypeScript compiler options — see typescript."
 ---
 
 # Nodejs Project Best Practices
+
+> **PREREQUISITE:** Load the following skill for TypeScript configuration details (tsconfig, project references, import conventions): `typescript`
 
 ## Package Manager (pnpm)
 
@@ -105,117 +107,6 @@ module.exports = {
   plugins: ["prettier-plugin-packagejson"],
 };
 ```
-
-## TypeScript
-
-### Base Config
-
-`tsconfig.json`:
-
-```json
-{
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.build.json"
-    }
-  ]
-}
-```
-
-`tsconfig.build.json`:
-
-```json
-{
-  /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults */
-
-  "compilerOptions": {
-    /* Language and Environment */
-    "target": "ES2018",
-
-    /* Modules */
-    "module": "node16",
-    "noUncheckedSideEffectImports": true,
-    "types": [],
-
-    /* Emit */
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-
-    /* Interop Constraints */
-    "erasableSyntaxOnly": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-
-    /* Type Checking */
-    "allowUnreachableCode": false,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "strict": true,
-
-    /* Projects */
-    "composite": true,
-    "incremental": true,
-
-    /* Completeness */
-    "skipLibCheck": true
-  },
-  "exclude": ["**/node_modules"]
-}
-```
-
-- for Node.js projects, add `"node"` to `compilerOptions.types`
-
-### Additional tsconfig files (e.g. E2E tests)
-
-When a project has files outside `src/` that import from `src/` (e.g. E2E tests in `tests/`, a `playwright.config.ts`), create a separate tsconfig that **references** `tsconfig.build.json` instead of duplicating `src` in its `include`. This way TypeScript resolves imports into `src/` through the project reference rather than re-including the source files.
-
-Example `tsconfig.e2e.json`:
-
-```jsonc
-{
-  "compilerOptions": {
-    // same base options as tsconfig.build.json, but:
-    "noEmit": true,
-    "composite": true,
-  },
-  "include": ["tests", "playwright.config.ts"],
-  "exclude": ["**/node_modules"],
-  "references": [{ "path": "./tsconfig.build.json" }],
-}
-```
-
-Add it to the root `tsconfig.json` references:
-
-```jsonc
-{
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.build.json" },
-    { "path": "./tsconfig.e2e.json" },
-  ],
-}
-```
-
-### Key rules
-
-- **Explicit file extensions required.** Import specifiers must include `.ts`/`.tsx` (or `.js`/`.jsx`) so TypeScript resolves them through the imports map without `tsconfig paths`.
-
-  ```ts
-  // ✅ correct
-  import { cn } from "#pkg/lib/utils.ts";
-  import { Button } from "#pkg/components/ui/button.tsx";
-
-  // ❌ wrong — TypeScript can't resolve extensionless paths through #imports
-  import { cn } from "#pkg/lib/utils";
-  ```
-
-- **No `tsconfig paths` needed.** TypeScript (`moduleResolution: "bundler"` or `"node16"`) resolves `#imports` from `package.json` natively when extensions are present.
 
 ## ESLint Setup
 
