@@ -1,6 +1,8 @@
-# Generate Alt Text
+---
+description: "Generate alt text for images. Use when asked to add, write, or generate alt text for an image, screenshot, chart, or diagram — or when inserting images into Markdown/HTML and alt text is missing."
+---
 
-Generate alt text for images. Use when asked to add, write, or generate alt text for an image, screenshot, chart, or diagram — or when inserting images into Markdown/HTML and alt text is missing.
+# Generate Alt Text
 
 ## Rules
 
