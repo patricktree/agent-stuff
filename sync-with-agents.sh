@@ -78,9 +78,7 @@ if [[ -f "${CENTRAL_MANAGED}" ]]; then
   rm -f "${CENTRAL_MANAGED}"
 fi
 
-for agent_skills_dir in "${CLAUDE_DIR}/skills" "${GITHUB_DIR}/skills"; do
-  # Replace directory symlink (old approach) with real dir if needed
-  [[ -L "${agent_skills_dir}" ]] && rm -f "${agent_skills_dir}"
+for agent_skills_dir in "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_DIR}/skills" "${PI_DIR}/skills"; do
   mkdir -p "${agent_skills_dir}"
 
   # Remove all existing skill symlinks (will be re-created from central hub)
