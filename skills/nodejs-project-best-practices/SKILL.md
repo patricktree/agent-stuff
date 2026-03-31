@@ -38,6 +38,16 @@ description: "Best practices for Node.js project setup, package metadata, lintin
   - e.g. `{ ".": "./dist/index.js", "./*": null }`
 - use the `package.json#imports` instead of `tsconfig.json#compilerOptions.paths` or bundler-specific aliases (e.g. Vite `resolve.alias`)
 
+## TypeScript
+
+Install TypeScript 6:
+
+```bash
+pnpm add -D typescript@^6.0.0
+```
+
+See the `typescript-project-setup` skill for tsconfig and build pipeline details.
+
 ## Prettier Setup
 
 Install Prettier and the package.json plugin:

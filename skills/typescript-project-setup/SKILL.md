@@ -5,6 +5,14 @@ description: "TypeScript project configuration: tsconfig setup, compiler options
 
 # TypeScript Project Setup
 
+## Installation
+
+Install TypeScript 6:
+
+```bash
+pnpm add -D typescript@^6.0.0
+```
+
 ## Build Pipeline
 
 - Compile TypeScript with `tsc` (project build). No `tsx`, `bun`, `ts-node`, `jiti`, or similar runtime transpilers.
