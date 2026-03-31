@@ -32,49 +32,51 @@ description: "TypeScript project configuration: tsconfig setup, compiler options
 
 ```json
 {
-  /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults */
+  /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults?version-tab=TS+6.0+Node.js */
 
   "compilerOptions": {
-    /* Language and Environment */
-    "target": "ES2018",
-
-    /* Modules */
-    "module": "node16",
-    "noUncheckedSideEffectImports": true,
-    "types": [],
-
-    /* Emit */
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-
-    /* Interop Constraints */
-    "erasableSyntaxOnly": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-
     /* Type Checking */
     "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
-    "strict": true,
+
+    /* Modules */
+    "module": "Node20",
+    "moduleResolution": "Node16",
+    "rootDir": "./src",
+    "types": ["node"],
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+
+    /* Interop Constraints */
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+
+    /* Language and Environment */
+    "target": "ES2020",
 
     /* Projects */
-    "composite": true,
     "incremental": true,
 
     /* Completeness */
     "skipLibCheck": true
   },
+  "include": ["src/**/*"],
   "exclude": ["**/node_modules"]
 }
 ```
 
-- for Node.js projects, add `"node"` to `compilerOptions.types`
+### TS 6.0 notes
+
+- `types` defaults to `[]` in TS 6.0 (no implicit `@types` inclusion). For Node.js projects, add `"node"` to `compilerOptions.types`.
+- `rootDir` defaults to the tsconfig directory in TS 6.0. Explicitly set `"rootDir": "./src"` in project configs so output structure in `dist/` mirrors the source layout.
 
 ## Additional tsconfig files (e.g. E2E tests)
 
