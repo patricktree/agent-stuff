@@ -52,7 +52,6 @@ Use Conventional Commits:
 ### Subject Line Rules
 
 - Use imperative, present tense: "Add feature" not "Added feature"
-- Capitalize the first letter
 - No period at the end
 
 ### Body Guidelines
