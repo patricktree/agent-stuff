@@ -67,6 +67,13 @@ module.exports = {
 };
 ```
 
+Create `.prettierignore`:
+
+```.gitignore
+**/dist
+pnpm-lock.yaml
+```
+
 ## ESLint Setup
 
 Install ESLint and all required plugins/configs:
