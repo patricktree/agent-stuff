@@ -49,6 +49,8 @@ Examples:
   5. styled components or presentation-only helpers
 - Colocate small helpers or wrappers when they are tightly coupled to one component or module.
 - Extract shared primitives such as `Anchor`, `Button`, or `Image` when they standardize framework usage.
+- Do not introduce barrel files such as `index.ts` or `index.tsx` by default.
+- Prefer direct imports from the defining module unless the local codebase already uses barrels consistently or a package-level public API genuinely benefits from one.
 
 ## Comments
 
@@ -120,6 +122,7 @@ Avoid:
 - unnecessary type gymnastics
 - magical test helpers
 - nested `describe(...)` trees by default
+- new barrel files without a clear package API boundary or an existing local convention
 
 ## package.json
 
