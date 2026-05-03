@@ -62,3 +62,7 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 
 - Use only when you need persistence/interaction (debugger/server).
 - Never background long-running processes (e.g. dev servers) with `&` inside a `bash` tool call — the tool waits for all child processes, so it will hang indefinitely. Use tmux instead.
+
+### markit
+
+- To fetch a website's content, use the `markit` skill.
