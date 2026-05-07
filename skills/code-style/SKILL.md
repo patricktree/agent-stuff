@@ -18,9 +18,13 @@ Apply this personal code style when writing or editing persistent code files.
 
 - Prefer straightforward, explicit code over clever abstractions.
 - Prefer readable code over terse code.
+- Prefer boring, explicit code and boring technology when possible.
+- Optimize for maintainability over cleverness.
 - Fail fast on invalid states and broken assumptions.
 - Keep control flow shallow when possible.
+- Keep functions tight and cohesive, with clear names and tight invariants.
 - Preserve observability: errors and important state transitions should be easy to understand.
+- Avoid speculative abstraction: inline obvious one-use code; extract only for reuse, domain meaning, or to simplify dense logic.
 - Add abstraction only when it has clear reuse value or models a real domain concept.
 
 ## Naming
