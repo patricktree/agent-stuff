@@ -47,10 +47,12 @@ Examples:
 - Keep one primary concern per file.
 - Order files predictably:
   1. imports
-  2. constants and local types
-  3. exported types, functions, or components
+  2. exported types that define the module's public contract
+  3. constants and exported functions or components
   4. internal helper functions
   5. styled components or presentation-only helpers
+- Put only exported types near the top of the file.
+- Colocate non-exported types with the function, component, or helper that uses them, so private implementation details stay contextual instead of looking like module-level API.
 - Colocate small helpers or wrappers when they are tightly coupled to one component or module.
 - Extract shared primitives such as `Anchor`, `Button`, or `Image` when they standardize framework usage.
 - Do not introduce barrel files such as `index.ts` or `index.tsx` by default.
