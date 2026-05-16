@@ -3,21 +3,73 @@ name: chrome-devtools-cli
 description: CLI to interact with Chrome Devtools (CDP). Use to automate browser tasks, take screenshots, evaluate scripts, or explore page structure, and more. Use standalone (i.e. with new profile) or connect to the user's Chrome ("autoConnect"). Use when you want to automate browser interactions, take screenshots, evaluate scripts, or explore page structure via CDP.
 ---
 
+# Chrome DevTools CLI
+
 ## Setup (once per machine)
 
 Register the server in the home-scoped mcporter config with **headless Chrome** by default:
 
 ```bash
 npx -y mcporter config add chrome-devtools \
-  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@0.17.1" --arg "--headless" \
+  --command "npx" --arg "-y" --arg "chrome-devtools-mcp@0.26.0" --arg "--headless" \
   --scope home
 ```
 
 This writes to `~/.mcporter/mcporter.json`. Only needed once.
 
-> **Pin the version!** Always use a specific version (currently `0.17.1`). The `@latest` tag has shipped broken builds in the past (e.g. `0.17.2` was missing its `build/` directory).
+> **Pin the version!** Always use a specific version (currently `0.26.0`). The `@latest` tag has shipped broken builds in the past (e.g. `0.17.2` was missing its `build/` directory).
 
 Use headless mode (`--headless`) unless you specifically need to see the browser window (e.g. for visual debugging). Headless is faster, uses less resources, and works in environments without a display.
+
+## Fast path: connect to a requested profile
+
+When the user gives a Chrome `userDataDir`, they do **not** need to specify
+whether that browser is already running. Auto-detect it first:
+
+1. If `DevToolsActivePort` exists and responds, configure the MCP server with
+   `--browserUrl` to attach to the running browser.
+2. Otherwise configure the MCP server with `--userDataDir` and let
+   `chrome-devtools-mcp` launch that profile.
+
+Do **not** try `--userDataDir` first for a running profile. That attempts to
+launch a second Chrome with the same profile and fails with "The browser is
+already running".
+
+```bash
+USER_DATA_DIR="$HOME/chrome-profiles/layest-agents" # replace with the requested profile
+BROWSER_URL=""
+
+if [ -f "$USER_DATA_DIR/DevToolsActivePort" ]; then
+  PORT=$(head -n 1 "$USER_DATA_DIR/DevToolsActivePort")
+  CANDIDATE_BROWSER_URL="http://127.0.0.1:$PORT"
+  if curl -fsS "$CANDIDATE_BROWSER_URL/json/version" >/dev/null; then
+    BROWSER_URL="$CANDIDATE_BROWSER_URL"
+  fi
+fi
+
+MCPORTER_SESSION_DIR=$(mktemp -d -t mcporter-session-XXXXXX)
+MCPORTER_CONFIG="$MCPORTER_SESSION_DIR/mcporter.json"
+node - <<'NODE' "$MCPORTER_CONFIG" "$USER_DATA_DIR" "$BROWSER_URL"
+const fs = require('fs');
+const [configPath, userDataDir, browserUrl] = process.argv.slice(2);
+const args = browserUrl
+  ? ['-y', 'chrome-devtools-mcp@0.26.0', '--browserUrl', browserUrl]
+  : ['-y', 'chrome-devtools-mcp@0.26.0', '--userDataDir', userDataDir, '--headless'];
+
+fs.writeFileSync(configPath, JSON.stringify({
+  mcpServers: {
+    'chrome-devtools': {
+      command: 'npx',
+      args,
+    },
+  },
+  imports: [],
+}, null, 2));
+NODE
+
+npx -y mcporter --config "$MCPORTER_CONFIG" daemon start --log
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.list_pages
+```
 
 ## Session lifecycle
 
@@ -83,6 +135,71 @@ npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script
 # Screenshot
 npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/shot.png fullPage=true
 ```
+
+## Recording video via CDP screencast frames
+
+Use Chrome DevTools Protocol `Page.startScreencast` when you need a short
+headless page recording and screenshots are not enough. This records page frames
+only; it does **not** capture audio, browser chrome, OS windows, or permission
+dialogs.
+
+The bundled `scripts/record-screencast.mjs` script connects to a page CDP target,
+acks each `Page.screencastFrame`, writes frames to disk, creates an ffconcat
+manifest using CDP frame timestamps, and optionally stitches the frames into an
+MP4 with `ffmpeg`.
+
+### Find the CDP endpoint
+
+For a user-managed Chrome launched with a known remote-debugging port, use that
+HTTP endpoint directly:
+
+```bash
+CDP_ENDPOINT=http://127.0.0.1:9222
+```
+
+For a headless Chrome launched by `chrome-devtools-mcp`, read the
+`DevToolsActivePort` file from the launched profile:
+
+```bash
+PROFILE_DIR=$(pgrep -fa "chrome-devtools-mcp/chrome-profile" \
+  | sed -n 's/.*--user-data-dir=\([^ ]*chrome-profile[^ ]*\).*/\1/p' \
+  | head -n 1)
+PORT=$(head -n 1 "$PROFILE_DIR/DevToolsActivePort")
+CDP_ENDPOINT="http://127.0.0.1:$PORT"
+```
+
+If multiple headless Chrome instances are running, inspect `pgrep -fa` output and
+choose the profile that belongs to this session.
+
+### Record and stitch
+
+Start recording after selecting/navigating the page with `mcporter`:
+
+```bash
+node scripts/record-screencast.mjs \
+  --endpoint "$CDP_ENDPOINT" \
+  --target "example.com" \
+  --seconds 12 \
+  --frames-dir /tmp/example-cdp-frames \
+  --output /tmp/example-cdp-recording.mp4
+```
+
+Omit `--seconds` to record until Ctrl-C. Omit `--output` to keep only raw frames,
+`frames.json`, and `frames.ffconcat`.
+
+To stitch manually with `ffmpeg`:
+
+```bash
+ffmpeg -y \
+  -f concat -safe 0 -i /tmp/example-cdp-frames/frames.ffconcat \
+  -vf 'scale=trunc(iw/2)*2:trunc(ih/2)*2' \
+  -vsync vfr -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+  /tmp/example-cdp-recording.mp4
+```
+
+Use the ffconcat manifest instead of `ffmpeg -framerate ... -i frame-%06d.jpg`
+when possible: CDP screencast frames are timestamped and may be variable-rate,
+especially when the page is idle or headless Chrome throttles rendering.
 
 ## Mobile / smartphone testing recipe
 
