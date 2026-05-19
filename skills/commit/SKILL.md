@@ -36,22 +36,22 @@ git log --oneline -30
 
 Use Conventional Commits:
 
-| Type | Purpose |
-|------|---------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Refactoring (no behavior change) |
-| `build` | Build system or dependencies |
-| `ci` | CI configuration |
-| `chore` | Maintenance tasks |
-| `docs` | Documentation only |
-| `style` | Code formatting (no logic change) |
-| `perf` | Performance improvement |
-| `test` | Test additions or corrections |
+| Type       | Purpose                           |
+| ---------- | --------------------------------- |
+| `feat`     | New feature                       |
+| `fix`      | Bug fix                           |
+| `refactor` | Refactoring (no behavior change)  |
+| `build`    | Build system or dependencies      |
+| `ci`       | CI configuration                  |
+| `chore`    | Maintenance tasks                 |
+| `docs`     | Documentation only                |
+| `style`    | Code formatting (no logic change) |
+| `perf`     | Performance improvement           |
+| `test`     | Test additions or corrections     |
 
 ### Subject Line Rules
 
-- Use imperative, present tense: "Add feature" not "Added feature"
+- Use imperative, present tense: "add feature" not "added feature"
 - No period at the end
 
 ### Body Guidelines
@@ -83,7 +83,7 @@ git commit -m "type(scope): Subject" \
 #### Simple fix
 
 ```
-fix(api): Handle null response in user endpoint
+fix(api): handle null response in user endpoint
 
 The user API could return null for deleted accounts, causing a crash
 in the dashboard. Add null check before accessing user properties.
@@ -94,7 +94,7 @@ Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.n
 #### Feature with scope
 
 ```
-feat(auth): Add OAuth2 refresh token rotation
+feat(auth): add OAuth2 refresh token rotation
 
 Rotate refresh tokens on each use to limit the window of token theft.
 Previous behavior reused the same refresh token until expiry.
@@ -105,7 +105,7 @@ Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.n
 #### Refactor
 
 ```
-refactor: Extract common validation logic to shared module
+refactor: extract common validation logic to shared module
 
 Move duplicate validation code from three endpoints into a shared
 validator class. No behavior change.
@@ -142,12 +142,3 @@ Forbidden unless the user explicitly asks:
 ### Stash
 
 Avoid manual `git stash`; if Git auto-stashes during pull/rebase, that's fine.
-
-### Multi-agent workflows
-
-- Check `git status` and `git diff` before edits.
-- Ship small commits.
-
-### Review before committing
-
-Run `git diff --cached` after staging but before committing to verify exactly what will be committed.
