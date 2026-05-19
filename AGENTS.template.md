@@ -29,8 +29,11 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 ## Git
 
 - **Never commit, amend, or push unless the user explicitly asks.**
+- Append this trailer to **every** commit message:
+  `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`
 - Remotes under `~/workspace`.
-- Use the `commit` skill for all commit message formatting, safe git practices, and workflow rules.
+- Use the `commit` skill for commit message formatting.
+- Use the `safe-git-practices` skill for branching, pushing, pulling, and destructive operations.
 
 ## Coding Style Notes
 
