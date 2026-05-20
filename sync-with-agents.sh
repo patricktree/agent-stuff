@@ -7,6 +7,8 @@ AGENTS_DIR="${HOME}/.agents"
 CLAUDE_DIR="${HOME}/.claude"
 CODEX_DIR="${HOME}/.codex"
 GITHUB_DIR="${HOME}/.github"
+GEMINI_DIR="${HOME}/.gemini"
+GEMINI_CONFIG_DIR="${GEMINI_DIR}/config"
 PI_DIR="${HOME}/.pi/agent"
 
 # --- Collect all skill and prompt source repos: this repo + any extras passed as args ---
@@ -29,7 +31,7 @@ for arg in "$@"; do
 done
 
 # --- Build AGENTS.md: base + optional platform additions from extra repos ---
-mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${GITHUB_DIR}" "${PI_DIR}"
+mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${GITHUB_DIR}" "${GEMINI_DIR}" "${GEMINI_CONFIG_DIR}" "${PI_DIR}"
 
 AGENTS_CONTENT=$(mktemp)
 cp "${SCRIPT_DIR}/AGENTS.template.md" "${AGENTS_CONTENT}"
@@ -44,6 +46,7 @@ cp "${AGENTS_CONTENT}" "${AGENTS_DIR}/AGENTS.md"
 cp "${AGENTS_CONTENT}" "${CLAUDE_DIR}/CLAUDE.md"
 cp "${AGENTS_CONTENT}" "${CODEX_DIR}/AGENTS.md"
 cp "${AGENTS_CONTENT}" "${GITHUB_DIR}/AGENTS.md"
+cp "${AGENTS_CONTENT}" "${GEMINI_DIR}/AGENTS.md"
 cp "${AGENTS_CONTENT}" "${PI_DIR}/AGENTS.md"
 rm -f "${AGENTS_CONTENT}"
 
@@ -78,7 +81,7 @@ if [[ -f "${CENTRAL_MANAGED}" ]]; then
   rm -f "${CENTRAL_MANAGED}"
 fi
 
-for agent_skills_dir in "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_DIR}/skills" "${PI_DIR}/skills"; do
+for agent_skills_dir in "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_DIR}/skills" "${GEMINI_CONFIG_DIR}/skills" "${PI_DIR}/skills"; do
   mkdir -p "${agent_skills_dir}"
 
   # Remove all existing skill symlinks (will be re-created from central hub)
