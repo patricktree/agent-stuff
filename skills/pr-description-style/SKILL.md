@@ -41,6 +41,13 @@ retention windows, or tradeoffs.
 
 ## Validation
 
+Created/Updated tests for:
+
+- Behavior or scenario covered by a new/changed test.
+- Edge case, regression, or failure path covered by a new/changed test.
+
+Ran:
+
 - `command that was run`
 - `another command that was run`
 ```
@@ -71,7 +78,9 @@ For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and
 
 ## Validation section
 
-- List commands actually run.
+- List tests created or updated, grouped under `Created/Updated tests for:` when any tests changed.
+- Describe test coverage by behavior/scenario, not only file names or test names.
+- List commands actually run under `Ran:`.
 - Use backticks for commands.
 - Include important manual checks when relevant.
 - Do not claim validation that was not performed.
