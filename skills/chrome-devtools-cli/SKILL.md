@@ -110,7 +110,16 @@ rm -rf "$MCPORTER_SESSION_DIR"
 
 ## Calling tools
 
-With the session daemon running, every call reuses the persistent server:
+With the session daemon running, every call reuses the persistent server.
+
+### Timeout budget for browser actions
+
+Keep Chrome actions fast and bounded:
+
+- Pass `timeout=5000` to any Chrome tool call that supports a timeout.
+- Never set a Chrome action timeout above 5 seconds unless the user explicitly asks.
+- If a click, navigation, or wait still needs longer, stop after 5 seconds, report what did not become ready, and ask whether to continue.
+- For JavaScript-driven clicks via `evaluate_script`, do not add sleeps longer than 5 seconds after the click; prefer `wait_for ... timeout=5000` for the expected UI change.
 
 ```bash
 # List available tools
@@ -226,7 +235,7 @@ npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script
 Then reload and capture screenshots:
 
 ```bash
-npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.navigate_page type=reload ignoreCache=true timeout=10000
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.navigate_page type=reload ignoreCache=true timeout=5000
 npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/mobile-before.png
 ```
 
@@ -251,7 +260,7 @@ npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.evaluate_script
 After sending, wait and capture:
 
 ```bash
-sleep 8
+npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.wait_for text="Done" timeout=5000
 npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.take_screenshot filePath=/tmp/mobile-after.png
 npx -y mcporter --config "$MCPORTER_CONFIG" call chrome-devtools.list_console_messages includePreservedMessages=true
 ```
