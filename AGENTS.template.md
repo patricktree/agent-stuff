@@ -48,6 +48,10 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 
 ## Tools
 
+### node / python
+
+- Prefer `node` (Node.js) over `python3` (Python) when directly executing small scripts or one-off code.
+
 ### pnpm
 
 - does not require `--` before CLI options or forwarded arguments; pass them directly.
