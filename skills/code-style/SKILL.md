@@ -98,6 +98,7 @@ Avoid:
 - Avoid `any`; prefer proper typing or `unknown` plus narrowing.
 - Use advanced type utilities only when they solve a real problem.
 - Favor runtime-backed types for important external data shapes.
+- Prefer default namespace imports for Node.js built-in modules and call members through that namespace. Use `import crypto from 'node:crypto';` with `crypto.createHash(...)` instead of named imports from `node:*` modules.
 
 ## React
 
