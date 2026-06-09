@@ -8,9 +8,9 @@ description: Auto-fix Markdown files via markdownlint-cli2. Use when you write m
 ## Quick flow
 
 1. Identify target Markdown file path(s) changed this turn.
-2. Run formatter:
-   - `pnpm dlx markdownlint-cli2 --fix <file>`
-3. Fix issues if reported; ignore `MD013/line-length` errors.
+2. Run formatter with this skill's config:
+   - `pnpm dlx markdownlint-cli2 --config /Users/pkerschbaum/.pi/agent/skills/markdownlint-fix/.markdownlint-cli2.jsonc --fix <file>`
+3. Fix issues if reported.
 
 ## Notes
 
