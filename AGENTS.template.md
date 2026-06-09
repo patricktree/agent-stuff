@@ -11,7 +11,6 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 
 ## Guardrails
 
-- Use `trash` for deletes.
 - Never run `sleep` with a value greater than 120 (2 min).
 
 ## Startup Checklist
@@ -55,10 +54,6 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 ### pnpm
 
 - does not require `--` before CLI options or forwarded arguments; pass them directly.
-
-### trash
-
-- Move files to Trash: `trash …` (system command).
 
 ### gh
 
