@@ -48,6 +48,8 @@ pnpm add -D typescript@^6.0.0
 
 See the `typescript-project-setup` skill for tsconfig and build pipeline details.
 
+For ESM scripts and CLIs on supported Node.js versions, top-level `await` is acceptable. Prefer it over wrapping the whole file in an async `main()` only to enable `await`, unless a named entrypoint improves readability, testability, or error boundaries.
+
 ## Prettier Setup
 
 Install Prettier and the package.json plugin:
