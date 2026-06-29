@@ -17,7 +17,6 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 
 - If file `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once/session.
 - Before running `pnpm` commands run `corepack enable` once/session.
-- Authenticate `gh` as bot: `export GH_TOKEN=$(~/scripts/gh-app-token.sh)` once/session.
 
 ## Build / Test
 
