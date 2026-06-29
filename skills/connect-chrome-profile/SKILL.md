@@ -6,7 +6,7 @@ argument-hint: "<chrome-user-data-dir>"
 
 # Connect Chrome Profile
 
-Connect `agent-browser` over CDP to the Chrome browser for exactly one provided user data directory, then verify the connection works. Do **not** run `agent-browser install`.
+Load the `agent-browser` skill by name first, then connect `agent-browser` over CDP to the Chrome browser for exactly one provided user data directory and verify the connection works. Do **not** run `agent-browser install`.
 
 ## Inputs
 
@@ -16,7 +16,7 @@ Connect `agent-browser` over CDP to the Chrome browser for exactly one provided 
 
 ## Workflow
 
-1. Load and follow the `agent-browser-cdp` skill, especially its “Connect to a Requested Chrome Profile” workflow.
+1. Load the `agent-browser` skill by name, then load and follow the `agent-browser-cdp` skill, especially its “Connect to a Requested Chrome Profile” workflow.
 2. Confirm the provided user data directory exists before connecting.
 3. Auto-detect whether that profile is already running:
    - If `${USER_DATA_DIR}/DevToolsActivePort` exists and `curl -fsS "http://127.0.0.1:${PORT}/json/version"` succeeds, attach with `agent-browser --session "${AB_SESSION}" connect "${PORT}"`.

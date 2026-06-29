@@ -16,4 +16,4 @@ Use for browser automation, screenshots, page inspection, JavaScript evaluation,
 
 ## Maintenance Notes
 
-Keep command examples aligned with `agent-browser --help` and the upstream README. Preserve the CDP-first behavior and the 5-second bounded-action guidance.
+Keep command examples aligned with `agent-browser --help` and the upstream README. Preserve the CDP-first behavior, the requirement to load the `agent-browser` skill by name, and the 5-second bounded-action guidance. Do not encode machine-specific skill paths.

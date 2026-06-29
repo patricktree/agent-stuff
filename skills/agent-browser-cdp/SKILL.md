@@ -5,7 +5,7 @@ description: Browser automation via agent-browser attached to an existing Chrome
 
 # agent-browser CDP
 
-Use `agent-browser` as a CDP client for an existing or system-launched Chrome. Do **not** run `agent-browser install`; this workflow never depends on agent-browser's bundled Chrome.
+Load the `agent-browser` skill by name first for the baseline CLI workflow, then apply these CDP-specific rules. Use `agent-browser` as a CDP client for an existing or system-launched Chrome. Do **not** run `agent-browser install`; this workflow never depends on agent-browser's bundled Chrome.
 
 ## Operating Rules
 
