@@ -2,12 +2,18 @@
 description: Load coding-related skills
 ---
 
+# Load coding-related skills
+
 Load the following skills:
 
 - `code-style`
 - `node`
 - `node-ts-commander-cli`
-- `nodejs-project-best-practices`
+- `nodejs-best-practices`
+- `nodejs-package-json`
+- `prettier-project-setup`
+- `eslint-typescript-project-setup`
+- `vitest-project-setup`
 - `playwright-docker-e2e`
 - `pnpm`
 - `turborepo`

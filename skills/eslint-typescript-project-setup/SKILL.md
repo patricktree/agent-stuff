@@ -1,80 +1,9 @@
 ---
-name: nodejs-project-best-practices
-description: "Best practices for Node.js project setup, package metadata, linting, formatting, testing, and repository tooling. Use when designing or editing package.json, ESLint, Prettier, Vitest, .gitignore, or general Node.js project conventions. Not for pnpm config or TypeScript build/tsconfig setup — see pnpm and typescript-project-setup."
+name: eslint-typescript-project-setup
+description: "ESLint setup for TypeScript Node.js projects. Use when adding, editing, or standardizing ESLint dependencies, .eslintrc.cjs, TypeScript ESLint, Node, import, regexp, jsdoc, unicorn, or eslint-comments rules."
 ---
 
-# Nodejs Project Best Practices
-
-> **PREREQUISITE:** Load the following skills as needed: `pnpm` for package-manager and workspace configuration, `typescript-project-setup` for TypeScript build and tsconfig guidance.
-
-## package.json Base
-
-```json
-{
-  "name": "<package-name>",
-  "private": true,
-  "type": "module",
-  "imports": {
-    "#pkg/*": "./dist/*"
-  },
-  "exports": {
-    ".": null,
-    "./*": null
-  },
-  "files": ["dist/**", "!dist/**/*.d.ts.map"],
-  "scripts": {
-    "build": "tsc --build ./tsconfig.json",
-    "dev": "tsc --build ./tsconfig.json --watch",
-    "format": "prettier --write --ignore-unknown .",
-    "lint": "eslint --max-warnings 0 .",
-    "lint:file": "eslint --max-warnings 0",
-    "lint:file:fix": "eslint --max-warnings 0 --fix",
-    "lint:fix": "eslint --max-warnings 0 . --fix"
-  }
-}
-```
-
-- change `package.json#exports` if the package exports things
-  - e.g. `{ ".": "./dist/index.js", "./*": null }`
-- use the `package.json#imports` instead of `tsconfig.json#compilerOptions.paths` or bundler-specific aliases (e.g. Vite `resolve.alias`)
-
-## TypeScript
-
-Install TypeScript 6:
-
-```bash
-pnpm add -D typescript@^6.0.0
-```
-
-See the `typescript-project-setup` skill for tsconfig and build pipeline details.
-
-For ESM scripts and CLIs on supported Node.js versions, top-level `await` is acceptable. Prefer it over wrapping the whole file in an async `main()` only to enable `await`, unless a named entrypoint improves readability, testability, or error boundaries.
-
-## Prettier Setup
-
-Install Prettier and the package.json plugin:
-
-```bash
-pnpm add -D prettier@^3.3.3 prettier-plugin-packagejson@^2.5.2
-```
-
-Create `prettier.config.cjs` with this exact config:
-
-```js
-module.exports = {
-  trailingComma: "all",
-  printWidth: 100,
-  endOfLine: "auto",
-  plugins: ["prettier-plugin-packagejson"],
-};
-```
-
-Create `.prettierignore`:
-
-```.gitignore
-**/dist
-pnpm-lock.yaml
-```
+# ESLint TypeScript Project Setup
 
 ## ESLint Setup
 
@@ -226,17 +155,13 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-base-to-string": [
       "error",
-      { ignoredTypeNames: ["Error", "Moment"] },
+      { ignoredTypeNames: ["Error", "Moment", "RegExp"] },
     ],
     "@typescript-eslint/no-confusing-non-null-assertion": "error",
     "@typescript-eslint/no-confusing-void-expression": "off",
     "@typescript-eslint/no-duplicate-enum-values": "error",
     "@typescript-eslint/no-extraneous-class": "off",
     "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/no-base-to-string": [
-      "error",
-      { ignoredTypeNames: ["RegExp"] },
-    ],
     "@typescript-eslint/no-invalid-void-type": "off",
     "@typescript-eslint/no-meaningless-void-operator": "error",
     "@typescript-eslint/no-misused-promises": [
@@ -334,63 +259,4 @@ module.exports = {
     },
   ],
 };
-```
-
-## .gitignore
-
-Create `.gitignore`:
-
-```.gitignore
-**/node_modules
-**/dist
-**/*.tsbuildinfo
-```
-
-## Testing (Vitest)
-
-Install Vitest:
-
-```bash
-pnpm add -D vitest@^4.0.18
-```
-
-Add scripts to `package.json`:
-
-```json
-{
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
-  }
-}
-```
-
-### Vite projects
-
-Import `defineConfig` from `vitest/config` instead of `vite` so the `test` key is typed:
-
-```ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  // ... existing plugins
-  test: {
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-
-    /**
-     * disabling {@link https://vitest.dev/config/#isolate} to improve performance and enable worker
-     * fixtures ({@link https://vitest.dev/guide/test-context.html#per-scope-context-3-2-0}); safe as
-     * our code doesn't (and should not!) rely on side effects
-     */
-    isolate: false,
-  },
-});
-```
-
-Include `vitest.d.ts` in the tsconfig:
-
-```json
-{
-  "include": ["vite.config.ts"]
-}
 ```

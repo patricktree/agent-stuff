@@ -143,7 +143,7 @@ The config and test files need tsconfig coverage.
 }
 ```
 
-**Create `tsconfig.e2e.json`** for test files, use the base metioned in <../nodejs-project-best-practices/SKILL.md> and:
+**Create `tsconfig.e2e.json`** for test files, use the base metioned in <../typescript-project-setup/SKILL.md> and:
 
 - set `noEmit: true` since Playwright runs tests directly from source
 - add `"node"` to `tsconfig.json#compilerOptions.types`

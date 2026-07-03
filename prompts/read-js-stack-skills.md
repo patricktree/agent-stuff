@@ -2,6 +2,8 @@
 description: Read Node.js, TypeScript, pnpm, Turborepo, and Playwright skills into context
 ---
 
+# Read JS stack skills
+
 Read all installed skills related to Node.js, TypeScript, pnpm, Turborepo, and Playwright before doing any other work.
 
 Start with these skill files if they exist:
@@ -11,7 +13,11 @@ Start with these skill files if they exist:
 - `~/.agents/skills/typescript-project-setup/SKILL.md`
 - `~/.agents/skills/pnpm/SKILL.md`
 - `~/.agents/skills/turborepo/SKILL.md`
-- `~/.agents/skills/nodejs-project-best-practices/SKILL.md`
+- `~/.agents/skills/nodejs-best-practices/SKILL.md`
+- `~/.agents/skills/nodejs-package-json/SKILL.md`
+- `~/.agents/skills/prettier-project-setup/SKILL.md`
+- `~/.agents/skills/eslint-typescript-project-setup/SKILL.md`
+- `~/.agents/skills/vitest-project-setup/SKILL.md`
 - `~/.agents/skills/node-ts-commander-cli/SKILL.md`
 - `~/.agents/skills/playwright-docker-e2e/SKILL.md`
 
