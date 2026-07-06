@@ -7,8 +7,8 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SKILL_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const DEFAULT_IMAGE = 'agent-docling-convert:2026-07-02';
-const DEFAULT_IMAGE_ARCHIVE = path.join(SKILL_ROOT, '.cache', 'docker-images', 'agent-docling-convert-2026-07-02.tar');
+const DEFAULT_IMAGE = 'agent-docling-convert:2026-07-06';
+const DEFAULT_IMAGE_ARCHIVE = path.join(SKILL_ROOT, '.cache', 'docker-images', 'agent-docling-convert-2026-07-06.tar');
 const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.docx', '.pptx', '.xlsx']);
 const FORMAT_EXTENSIONS = new Map([
   ['md', '.md'],

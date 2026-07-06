@@ -31,6 +31,7 @@ Common variants:
 ```sh
 node scripts/docling-convert.mjs --input ./paper.pdf --out-dir ./converted --json
 node scripts/docling-convert.mjs --input ./paper.pdf --output ./converted/paper.md --overwrite
+node scripts/docling-convert.mjs --input ./text.pdf --out-dir ./converted -- --no-ocr
 node scripts/docling-convert.mjs --input ./scan.pdf --out-dir ./converted -- --ocr --force-ocr
 ```
 
@@ -44,8 +45,8 @@ node scripts/docling-convert.mjs --input ./scan.pdf --out-dir ./converted -- --o
   - `--output <file.md>`: writes the primary Markdown file exactly there.
 - Fails rather than overwriting existing output unless `--overwrite` is passed.
 - Builds the local Docker image from this skill's `Dockerfile` when missing;
-  first build can be slow because it installs Docling and downloads PDF layout
-  and table models for offline conversion.
+  first build can be slow because it installs Docling, native OpenCV runtime
+  libraries, and PDF layout, table, and RapidOCR models for offline conversion.
 - Saves the default image to `.cache/docker-images/` inside this skill after
   build and reloads it if `docker system prune -a` removes the Docker image.
 - Runs Docker with input parent mounted read-only and output mounted read-write.
@@ -73,7 +74,7 @@ output path when requested/emitted.
 
 | Variable | Default | Purpose |
 | --- | ---: | --- |
-| `DOCLING_DOCKER_IMAGE` | `agent-docling-convert:2026-07-02` | Override the Docker image. |
+| `DOCLING_DOCKER_IMAGE` | `agent-docling-convert:2026-07-06` | Override the Docker image. |
 | `DOCLING_DOCKER_BUILD` | `missing` | `never`, `missing`, or `always` for building the default image. |
 | `DOCLING_DOCKER_ARCHIVE` | `missing` | `never`, `missing`, or `always` for saving the default image archive. |
 | `DOCLING_DOCKER_NETWORK` | `none` | Docker network mode. |
@@ -86,8 +87,13 @@ output path when requested/emitted.
 - If conversion fails, retry only after addressing the specific Docling or Docker
   error; do not silently fall back to Python, `markit`, or another converter.
 - If output exists, rerun with `--overwrite` only when replacing it is intended.
-- For scanned PDFs or OCR issues, pass Docling flags after `--` instead of adding
-  wrapper-specific OCR options.
+- OCR is available offline in the default image. For scanned PDFs, pass Docling
+  flags after `--`, such as `-- --ocr --force-ocr`.
+- For text PDFs where OCR is unnecessary or produces worse output, retry with
+  `-- --no-ocr`.
+- If Docling reports missing native libraries such as `libxcb.so.1` or
+  `libGL.so.1`, force a default image rebuild with `DOCLING_DOCKER_BUILD=always`
+  and confirm the rebuilt image tag matches the default image in this skill.
 
 ## Batch Pattern
 

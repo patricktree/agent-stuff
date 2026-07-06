@@ -14,6 +14,7 @@ In scope:
 - Optional Docling JSON sidecar output.
 - Docker-based execution with a bundled image build and skill-local non-Docker
   archive restore cache.
+- Offline OCR for scanned PDFs through bundled RapidOCR model artifacts.
 - Safe file handling: narrow mounts, no network by default, no overwrite by
   default, current-user output ownership by default.
 
@@ -44,8 +45,8 @@ Out of scope:
   success.
 - Non-negotiable constraints: no local Python fallback; no silent overwrites;
   Docker image must be restorable from archive after prune when the default image
-  is used; Docker network disabled by default; only PDF/DOCX/PPTX/XLSX accepted unless
-  `--force` is explicit.
+  is used; Docker network disabled by default; OCR must work offline in the default
+  image; only PDF/DOCX/PPTX/XLSX accepted unless `--force` is explicit.
 - Expected bundled files loaded at runtime: `SKILL.md`; the script and Dockerfile
   are executed/read by the helper as needed.
 
@@ -85,11 +86,17 @@ Data that must not be stored:
 
 - Lightweight validation:
   - `node scripts/docling-convert.mjs --help`
+  - `node --check scripts/docling-convert.mjs`
   - Docker daemon availability check.
   - Docker image build.
-  - default image archive save/load behavior.
+  - Default image archive save/load behavior.
+  - Confirm `/opt/docling/models/RapidOcr` exists in the default image.
 - Deeper validation:
   - Convert a sample PDF to Markdown with Docker network disabled.
+  - Convert a sample PDF with default OCR enabled and, when needed, with
+    `-- --no-ocr` to isolate OCR-specific failures.
+  - Convert or smoke-test a scanned/PDF-image input with `-- --ocr --force-ocr`
+    when sample data is available.
   - Convert at least one Office file with Docker network disabled when sample
     data is available.
   - Verify overwrite and unsupported-extension failures.
@@ -105,7 +112,7 @@ Data that must not be stored:
 ## Known Limitations
 
 - The bundled Docker image build and first archive save may be slow because they
-  download and persist Docling dependencies and PDF layout/table models.
+  download and persist Docling dependencies and PDF layout/table/RapidOCR models.
 - The default image installs the latest Docling available at build time; pin the
   Dockerfile dependency if a future Docling CLI change breaks the wrapper.
 - Exact `--output` mode maps Docling directory output back to a single requested
