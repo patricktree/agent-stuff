@@ -1,6 +1,6 @@
 ---
 name: pr-description-style
-description: Captures preferred pull request description structure and writing style. Use when creating, editing, or proposing PR descriptions, GitHub PR bodies, merge request descriptions, or review summaries for code changes.
+description: Captures preferred pull request description structure and writing style, including Conventional Commits-style detail bullets. Use when creating, editing, or proposing PR descriptions, GitHub PR bodies, merge request descriptions, or review summaries for code changes.
 ---
 
 # PR Description Style
@@ -33,11 +33,14 @@ Explain the intended behavior after the change.
 Keep this outcome-focused. Mention important policy choices, thresholds,
 retention windows, or tradeoffs.
 
-## Changes
+## Details
 
-- List concrete code/config/docs changes.
-- Keep bullets specific and reviewable.
-- Separate behavior changes from cleanup/documentation changes when useful.
+- feat(scope): add concrete behavior or capability
+- fix(scope): correct bug, regression, or failure path
+- test(scope): cover important scenario or edge case
+- test(migration-cli): make `pnpm test` run all Vitest projects and add a dedicated `test:unit` script
+
+List concrete code/config/docs changes as Conventional Commits-style bullets.
 
 ## Validation
 
@@ -50,6 +53,10 @@ Ran:
 
 - `command that was run`
 - `another command that was run`
+
+---
+
+Written by @patricktree's agent ({agent}, {model}).
 ```
 
 For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and
@@ -69,9 +76,12 @@ For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and
 - Keep it readable for non-authors and future operators.
 - Avoid over-explaining obvious implementation mechanics.
 
-## Changes section
+## Details section
 
-- Use bullets.
+- Use Conventional Commits-style bullets: "type(scope): concise summary".
+- Prefer these types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, and `style`.
+- Use a scope when it clarifies the touched domain, package, module, or workflow; omit it when it would be forced.
+- Use `!` for breaking changes, and add a short `BREAKING CHANGE:` note when reviewer context is needed.
 - Mention primary files, modules, resources, or workflows changed when useful.
 - Separate behavior changes from validation fixes, cleanup, or documentation changes.
 - Keep bullets parallel, concrete, and reviewable.
@@ -85,6 +95,22 @@ For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and
 - Include important manual checks when relevant.
 - Do not claim validation that was not performed.
 - State blockers explicitly when validation could not be run.
+
+## Attribution footer
+
+- End every agent-authored PR description with this visible footer format:
+
+  ```md
+  ---
+
+  Written by @patricktree's agent ({agent}, {model}).
+  ```
+
+- Replace `{agent}` and `{model}` with the current runtime's public agent/tool name and model name; never emit the placeholders.
+- Do not guess unavailable identity details. If both are unavailable, use `Written by @patricktree's agent.`; if only one is available, include only that value in parentheses.
+- Add the footer once; do not duplicate an existing equivalent footer.
+- Keep it as the final agent-authored content. Repository automation may append hidden comments or generated content after it.
+- Omit it only when the user explicitly requests that for the specific PR.
 
 ## Tone
 
