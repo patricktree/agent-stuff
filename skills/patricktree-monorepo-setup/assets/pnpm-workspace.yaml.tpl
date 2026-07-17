@@ -1,0 +1,62 @@
+packages:
+  - apps/*
+  - libs/*
+  - qa-utils/*
+  - tooling/*
+  - .patricktree-stack/libs/o11y.logs
+  - .patricktree-stack/libs/o11y.node-sdk
+  - .patricktree-stack/libs/utils-ecma
+  - .patricktree-stack/libs/utils-node
+  - .patricktree-stack/qa-utils/test-utils-node
+  - .patricktree-stack/tooling/config-oxfmt
+  - .patricktree-stack/tooling/config-oxlint
+  - .patricktree-stack/tooling/config-turbo-typescript
+  - .patricktree-stack/tooling/config-typescript
+  - .patricktree-stack/tooling/config-vitest
+  - .patricktree-stack/tooling/create-pruned-monorepo
+  - .patricktree-stack/tooling/pkg-management
+
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+  msgpackr-extract: true
+  protobufjs: true
+  unrs-resolver: true
+
+catalog:
+  "@typescript/native": "npm:typescript@^7.0.2"
+  "@types/node": ^{{nodeMajor}}
+  oxfmt: ^0.58.0
+  oxlint: ^1.72.0
+  oxlint-tsgolint: ^0.24.0
+  typescript: "npm:@typescript/typescript6@^6.0.2"
+  vitest: ^4.1.9
+
+catalogs:
+  o11y:
+    "@opentelemetry/api": ^1.9.1
+    "@opentelemetry/api-logs": ^0.220.0
+    "@opentelemetry/sdk-logs": ^0.220.0
+    "@opentelemetry/sdk-node": ^0.220.0
+
+packageExtensions:
+  eslint-plugin-react-you-might-not-need-an-effect@1.0.1:
+    # "eslint-plugin-react-you-might-not-need-an-effect" defines eslint as peer dependency, but that is not required when used by oxlint --> make it optional
+    peerDependenciesMeta:
+      eslint:
+        optional: true
+
+# handle peer dependencies in a strict way
+autoInstallPeers: false
+resolvePeersFromWorkspaceRoot: false
+strictPeerDependencies: true
+dedupePeerDependents: false
+
+# enforce specific Node.js and pnpm version (https://pnpm.io/npmrc#engine-strict)
+engineStrict: true
+
+# disable update notifier (https://pnpm.io/npmrc#update-notifier)
+updateNotifier: false
+
+# workspace-concurrency=0 will use amount of cores of the host to run tasks concurrently (https://pnpm.io/cli/recursive#--workspace-concurrency)
+workspaceConcurrency: 0

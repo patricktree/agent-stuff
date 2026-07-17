@@ -1,0 +1,48 @@
+{
+  "name": "@{{scope}}/monorepo-root",
+  "private": true,
+  "files": [
+    "./patches/**",
+    "./.pnpmfile.cjs",
+    "./.pnpmfile.mjs",
+    "./pnpm-lock.yaml",
+    "./pnpm-workspace.yaml",
+    "./postinstall.sh"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "turbo run turbo:build",
+    "build:watch": "turbo watch turbo:build",
+    "clean": "pnpm run --parallel clean && pnpm exec del-cli \"**/node_modules\" \"**/.turbo\"",
+    "declutter": "knip",
+    "fix": "pnpm run format && pnpm run lint:fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "turbo run turbo:lint",
+    "lint:fix": "turbo run turbo:lint:fix",
+    "postinstall": "sh ./postinstall.sh",
+    "test": "turbo run turbo:test",
+    "validate": "turbo run turbo:build turbo:lint turbo:test && pnpm run declutter"
+  },
+  "devDependencies": {
+    "@emnapi/core": "^1.11.2",
+    "@emnapi/runtime": "^1.11.2",
+    "@patricktree-stack/config-oxfmt": "workspace:*",
+    "del-cli": "^7.0.0",
+    "eslint-plugin-react-you-might-not-need-an-effect": "^1.0.1",
+    "husky": "^9.1.7",
+    "knip": "^6.24.0",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "turbo": "^2.10.3"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "{{nodeVersion}}",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@{{pnpmVersion}}"
+}

@@ -9,6 +9,8 @@
 
 Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agent-stuff/README.md`. Skills and prompt templates are centrally managed — the files you see in `~/.claude/`, `~/.pi/`, `~/.github/`, or `~/.agents/` are **synced copies or symlinks**, not the source of truth. Edits must be made in the canonical source repos (`~/workspace/agent-stuff/` or a device-specific repo) and then synced via `sync-with-agents.sh`.
 
+Skill directories may be symlinks. When locating bundled skill files, resolve the skill directory with `realpath` or use `find -H`; do not treat an empty plain `find` result as proof that a file is absent.
+
 ## Guardrails
 
 - Never run `sleep` with a value greater than 120 (2 min).
