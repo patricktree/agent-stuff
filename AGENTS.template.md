@@ -39,6 +39,7 @@ Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agen
 - Avoid complex patterns; prefer straightforward code.
 - Follow existing code patterns; consistency is more important than cleverness.
 - Use comments to explain "why" not "what"; code should be self-explanatory about "what".
+- Markdown: keep each prose paragraph and list item on one physical line; use line breaks only for intentional structure such as headings, lists, tables, blockquotes, and fenced code.
 
 ## Language/Stack Notes
 
