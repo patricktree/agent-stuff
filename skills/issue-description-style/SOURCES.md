@@ -4,7 +4,7 @@
 
 | Source | Trust | Contribution | Constraints |
 | --- | --- | --- | --- |
-| Direct user instructions in the task creating and clarifying this skill | Authoritative | Requires an issue-description skill and a `Written by @patricktree's agent (…)` footer adapted to the current agent and model | Use known runtime identity details; do not guess unavailable values |
+| Direct user instructions in the task creating and clarifying this skill | Authoritative | Requires an issue-description skill, prose without hard wrapping, and a `Written by @patricktree's agent (…)` footer adapted to the current agent and model | Use known runtime identity details; do not guess unavailable values |
 | Existing `pr-description-style` skill | High local prior art | Supplies template-first behavior, concise tone, validation honesty, footer placement, and deduplication | Adapt for issue outcomes rather than code-change review |
 | [pnpm PR #13063](https://github.com/pnpm/pnpm/pull/13063) | Example | Shows the requested visible attribution before generated content | Use only as a footer example |
 
@@ -22,6 +22,7 @@
 - **Adopted:** route bug, feature, and maintenance issues to distinct minimal structures.
 - **Adopted:** put observed behavior before implementation suggestions.
 - **Adopted:** require testable acceptance criteria and prohibit invented evidence.
+- **Adopted:** keep each prose paragraph on one physical line and reserve line breaks for intentional Markdown structure.
 - **Adopted:** append the attribution once as final agent-authored visible content and adapt it to the current agent and model without guessing unavailable details.
 - **Rejected:** require one large universal issue template; it adds empty sections and noise.
 - **Deferred:** label, severity, assignee, and milestone policy because repositories differ.

@@ -28,7 +28,7 @@ Out of scope:
 
 - Required first actions: inspect and follow the repository PR template when one exists.
 - Required outputs: a concise PR body grounded in the actual change and validation performed.
-- Non-negotiable constraints: append the agent-attribution footer once as the final agent-authored visible content, using known runtime identity details without guessing, unless the user explicitly overrides it for that PR.
+- Non-negotiable constraints: do not hard-wrap prose; place `Closes #<number>` on the first non-comment line when the PR fully resolves a known issue unless a repository template requires otherwise; append the agent-attribution footer once as the final agent-authored visible content, using known runtime identity details without guessing, unless the user explicitly overrides it for that PR.
 - Expected bundled files loaded at runtime: `SKILL.md` only.
 
 ## Source And Evidence Model
@@ -58,7 +58,7 @@ Data that must not be stored:
 
 - Lightweight validation: run the skill validator and Markdown linting.
 - Deeper validation: verify representative substantive and mechanical PR drafts.
-- Acceptance gates: local template is respected, claims match evidence, and the runtime-specific footer appears once.
+- Acceptance gates: the local template is respected, prose paragraphs are not hard-wrapped, applicable closing issue linkage appears at the top, claims match evidence, and the runtime-specific footer appears once.
 
 ## Known Limitations
 

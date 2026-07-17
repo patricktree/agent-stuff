@@ -28,7 +28,7 @@ Out of scope:
 
 - Required first actions: inspect repository issue forms, templates, and contribution guidance.
 - Required outputs: an issue body using the smallest structure suitable for its issue type.
-- Non-negotiable constraints: do not invent evidence; redact sensitive data; append the agent-attribution footer once as the final agent-authored visible content, using known runtime identity details without guessing, unless explicitly overridden for that issue.
+- Non-negotiable constraints: do not hard-wrap prose; do not invent evidence; redact sensitive data; append the agent-attribution footer once as the final agent-authored visible content, using known runtime identity details without guessing, unless explicitly overridden for that issue.
 - Expected bundled files loaded at runtime: `references/examples.md` only when selecting a structure or repairing a weak draft.
 
 ## Source And Evidence Model
@@ -59,7 +59,7 @@ Data that must not be stored:
 
 - Lightweight validation: run the skill validator and Markdown linting.
 - Deeper validation: review bug, feature, maintenance, and vague-input examples.
-- Acceptance gates: the local template is respected, unsupported claims are absent, acceptance criteria are actionable, and the runtime-specific footer appears once.
+- Acceptance gates: the local template is respected, prose paragraphs are not hard-wrapped, unsupported claims are absent, acceptance criteria are actionable, and the runtime-specific footer appears once.
 
 ## Known Limitations
 

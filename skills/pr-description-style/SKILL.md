@@ -16,22 +16,22 @@ Apply this style when drafting, editing, or updating pull request descriptions.
 
 ## Default structure
 
-Prefer this structure for substantive changes:
+Prefer this structure for substantive changes. Include the first line only when the PR fully resolves that issue:
 
 ```md
+Closes #123
+
 ## Problem
 
 Explain the current behavior or gap, and why it matters.
 
-Use bullets for separate impacts such as cost, GDPR/privacy, reliability,
-security, UX, maintainability, or operational risk.
+Use bullets for separate impacts such as cost, GDPR/privacy, reliability, security, UX, maintainability, or operational risk.
 
 ## Solution
 
 Explain the intended behavior after the change.
 
-Keep this outcome-focused. Mention important policy choices, thresholds,
-retention windows, or tradeoffs.
+Keep this outcome-focused. Mention important policy choices, thresholds, retention windows, or tradeoffs.
 
 ## Details
 
@@ -59,8 +59,19 @@ Ran:
 Written by @patricktree's agent ({agent}, {model}).
 ```
 
-For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and
-`## Solution` when there is no meaningful problem framing.
+For tiny mechanical PRs, `## Summary` is acceptable instead of `## Problem` and `## Solution` when there is no meaningful problem framing.
+
+## Issue linkage
+
+- When the PR fully resolves a known issue, put `Closes #<number>` on the first non-comment line, before every heading.
+- Write the closing line without a trailing period.
+- Omit the closing keyword when the PR only partially addresses the issue or the issue number is unknown.
+- Follow a repository template's dedicated issue-link field when it requires a different placement.
+
+## Formatting
+
+- Keep each prose paragraph on one physical line; do not hard-wrap prose.
+- Use line breaks only for intentional Markdown structure such as headings, blank lines, lists, blockquotes, tables, and fenced code.
 
 ## Problem section
 

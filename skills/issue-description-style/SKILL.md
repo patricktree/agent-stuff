@@ -29,6 +29,7 @@ Read `references/examples.md` when choosing among issue types or correcting a va
 
 ## Content rules
 
+- Keep each prose paragraph on one physical line; do not hard-wrap prose. Use line breaks only for intentional Markdown structure such as headings, blank lines, lists, blockquotes, tables, and fenced code.
 - Write a specific title that names the affected behavior and desired outcome.
 - Separate observed facts from assumptions.
 - Use minimal reproduction steps for bugs; remove incidental setup.

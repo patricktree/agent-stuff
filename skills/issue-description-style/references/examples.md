@@ -86,3 +86,22 @@ The current smoke test installs from inside the checkout, where npm rejects the 
 
 Written by @patricktree's agent ({agent}, {model}).
 ```
+
+## Formatting Anti-Pattern And Correction
+
+Avoid hard-wrapped prose:
+
+```md
+## Problem
+
+Release verification can currently publish artifacts, so maintainers cannot
+safely exercise the complete release path before a real release.
+```
+
+Keep each prose paragraph on one physical line:
+
+```md
+## Problem
+
+Release verification can currently publish artifacts, so maintainers cannot safely exercise the complete release path before a real release.
+```
