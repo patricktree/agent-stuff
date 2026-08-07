@@ -14,6 +14,7 @@ Skill directories may be symlinks. When locating bundled skill files, resolve th
 ## Guardrails
 
 - Never run `sleep` with a value greater than 120 (2 min).
+- Do not disable, weaken, skip, or delete lint rules, type checks, or tests to make validation pass. Fix the underlying issue; ask the user before introducing an exception.
 
 ## Startup Checklist
 
