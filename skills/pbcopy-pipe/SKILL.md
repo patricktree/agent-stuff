@@ -9,7 +9,7 @@ Use `pbcopy` through a shell pipe when the user asks to copy generated text to t
 
 ## Flow
 
-1. Decide the exact text to copy.
+1. Decide the exact text to copy. If the user provides no text or target, copy the assistant's immediately preceding message.
 2. Pipe it to `pbcopy` with a quoted here-document:
 
 ```sh
