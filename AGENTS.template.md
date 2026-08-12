@@ -1,73 +1,32 @@
-# AGENTS.MD
+# Agent Instructions
 
-## Agent Protocol
+These are Patrick's shared defaults for all coding-agent work.
+
+## Protocol
 
 - Contact: Patrick Kerschbaum (website <https://patricktree.me>, email <patrick.kerschbaum@gmail.com>, X `@patricktree_`, GitHub `patricktree`, Bluesky `patricktree.me`).
-- Workspace: `~/workspace`
-
-## Skills & Prompt Templates
-
-Before editing any skill (`SKILL.md`) or prompt template, read `~/workspace/agent-stuff/README.md`. Skills and prompt templates are centrally managed — the files you see in `~/.claude/`, `~/.pi/`, `~/.github/`, or `~/.agents/` are **synced copies or symlinks**, not the source of truth. Edits must be made in the canonical source repos (`~/workspace/agent-stuff/` or a device-specific repo) and then synced via `sync-with-agents.sh`.
-
-Skill directories may be symlinks. When locating bundled skill files, resolve the skill directory with `realpath` or use `find -H`; do not treat an empty plain `find` result as proof that a file is absent.
+- Treat files in `~/.agents/`, `~/.claude/`, `~/.codex/`, `~/.gemini/`, `~/.github/`, and `~/.pi/` as synced outputs, not sources.
+- Before editing a skill (`SKILL.md`) or prompt template, read `~/workspace/agent-stuff/README.md`; edit the canonical source under `~/workspace/agent-stuff/` or the relevant device repo, then run `sync-with-agents.sh` with the relevant sources.
 
 ## Guardrails
 
-- Never run `sleep` with a value greater than 120 (2 min).
-- Do not disable, weaken, skip, or delete lint rules, type checks, or tests to make validation pass. Fix the underlying issue; ask the user before introducing an exception.
+- Keep `sleep` calls at 120 seconds or less.
+- Keep lint rules, type checks, and tests enabled; fix underlying failures and ask before adding an exception or changing linting or compiler settings.
+- Get explicit user approval before committing, amending, pushing, branching, pulling, rebasing, merging, stashing, restoring, resetting, cleaning, removing, or switching worktrees; use `commit` and `safe-git-practices` for approved Git changes.
+- Keep Git remotes under `~/workspace`.
+- Include this trailer in every commit message: `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`.
 
-## Startup Checklist
+## Session setup
 
-- If file `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once/session.
-- Before running `pnpm` commands run `corepack enable` once/session.
+- If `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once per session.
+- Before the first `pnpm` command, run `corepack enable` once per session; use the `pnpm` skill for package-manager details.
 
-## Build / Test
+## Validation
 
-- Run full validation (format → build → typecheck → lint → tests) when you think you are finished.
-- Keep it observable (logs, panes, tails, MCP/browser tools).
-- Prefer end-to-end verify; if blocked, say what's missing.
+- Before handoff, run the repository's documented format, build, typecheck, lint, and test checks when applicable.
 
-## Git
+## Conditional references
 
-- **Never commit, amend, or push unless the user explicitly asks.**
-- Append this trailer to **every** commit message:
-  `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`
-- Remotes under `~/workspace`.
-- Use the `commit` skill for commit message formatting.
-- Use the `safe-git-practices` skill for branching, pushing, pulling, and destructive operations.
-
-## Coding Style Notes
-
-- Use defensive programming ("fail fast") and type safety (TypeScript).
-- Avoid complex patterns; prefer straightforward code.
-- Follow existing code patterns; consistency is more important than cleverness.
-- Use comments to explain "why" not "what"; code should be self-explanatory about "what".
-- Markdown: keep each prose paragraph and list item on one physical line; use line breaks only for intentional structure such as headings, lists, tables, blockquotes, and fenced code.
-
-## Language/Stack Notes
-
-- TypeScript: use repo package manager (no swaps w/o approval); follow existing patterns.
-
-## Tools
-
-### node / python
-
-- Prefer `node` (Node.js) over `python3` (Python) when directly executing small scripts or one-off code.
-
-### pnpm
-
-- does not require `--` before CLI options or forwarded arguments; pass them directly.
-
-### gh
-
-- GitHub CLI for PRs/CI/releases. Given issue/PR URL (or `/pull/5`): use `gh`, not web search.
-- Examples: `gh issue view <url> --comments -R owner/repo`, `gh pr view <url> --comments --files -R owner/repo`.
-
-### tmux
-
-- Use only when you need persistence/interaction (debugger/server).
-- Never background long-running processes (e.g. dev servers) with `&` inside a `bash` tool call — the tool waits for all child processes, so it will hang indefinitely. Use tmux instead.
-
-### markit
-
-- To fetch a website's content, use the `markit` skill.
+- For persistent code edits, use the `code-style` skill.
+- For GitHub issue, pull request, CI, or release work, use `gh` rather than web search.
+- Use Node.js rather than Python for small one-off scripts.

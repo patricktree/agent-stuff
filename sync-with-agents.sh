@@ -14,6 +14,7 @@ PI_DIR="${HOME}/.pi/agent"
 # --- Collect all skill and prompt source repos: this repo + any extras passed as args ---
 SKILL_SOURCES=("${SCRIPT_DIR}/skills")
 PROMPT_SOURCES=("${SCRIPT_DIR}/prompts")
+PI_EXTENSION_SOURCES=("${SCRIPT_DIR}/pi-extensions")
 for arg in "$@"; do
   abs_arg="$(cd "${arg}" && pwd)"
   found=false
@@ -25,8 +26,12 @@ for arg in "$@"; do
     PROMPT_SOURCES+=("${abs_arg}/prompts")
     found=true
   fi
+  if [[ -d "${arg}/pi-extensions" ]]; then
+    PI_EXTENSION_SOURCES+=("${abs_arg}/pi-extensions")
+    found=true
+  fi
   if [[ "${found}" == "false" ]]; then
-    echo "Warning: skipping '${arg}' (no skills/ or prompts/ directory found)" >&2
+    echo "Warning: skipping '${arg}' (no skills/, prompts/, or pi-extensions/ directory found)" >&2
   fi
 done
 
@@ -176,5 +181,30 @@ for source_dir in "${PROMPT_SOURCES[@]}"; do
   done
 done
 
-echo "Synced skills from ${#SKILL_SOURCES[@]} source(s), prompts from ${#PROMPT_SOURCES[@]} source(s)"
+# --- Symlink Pi extensions ---
+PI_EXTENSIONS_DIR="${PI_DIR}/extensions"
+PI_EXTENSIONS_MANAGED="${PI_EXTENSIONS_DIR}/.sync-managed-extensions"
+mkdir -p "${PI_EXTENSIONS_DIR}"
+
+if [[ -f "${PI_EXTENSIONS_MANAGED}" ]]; then
+  while IFS= read -r extension_name; do
+    rm -rf "${PI_EXTENSIONS_DIR}/${extension_name}"
+  done < "${PI_EXTENSIONS_MANAGED}"
+fi
+> "${PI_EXTENSIONS_MANAGED}"
+
+for source_dir in "${PI_EXTENSION_SOURCES[@]}"; do
+  [[ -d "${source_dir}" ]] || continue
+
+  for extension in "${source_dir}"/*; do
+    [[ -f "${extension}" || -d "${extension}" ]] || continue
+    extension_name="$(basename "${extension}")"
+    target="${PI_EXTENSIONS_DIR}/${extension_name}"
+    rm -rf "${target}"
+    ln -s "${extension}" "${target}"
+    echo "${extension_name}" >> "${PI_EXTENSIONS_MANAGED}"
+  done
+done
+
+echo "Synced skills from ${#SKILL_SOURCES[@]} source(s), prompts from ${#PROMPT_SOURCES[@]} source(s), Pi extensions from ${#PI_EXTENSION_SOURCES[@]} source(s)"
 echo "Run 'cd ~/.agents && git add -A && git status' to review changes"
