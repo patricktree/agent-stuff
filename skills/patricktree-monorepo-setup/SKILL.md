@@ -44,6 +44,15 @@ The script derives the Node.js major and aligns the catalog automatically:
 5. Re-run the same command with `--mode apply`. The script adds or initializes
    `.patricktree-stack`, writes deterministic setup files, preserves existing
    `.gitignore` entries, and prints a JSON result.
+   The generated workspace opts into only the `.patricktree-stack` projects used
+   by the baseline (currently `tooling/config-oxfmt`). Add further submodule
+   project paths to `pnpm-workspace.yaml` only when the consuming repository uses
+   them; do not enumerate the whole submodule.
+   The baseline also runs online Zizmor validation through uvx from the
+   pre-commit hook. It expects authenticated gh and installed uvx commands;
+   Knip is configured to ignore uvx, while gh is detected from the package
+   script. The shared catalog contains only baseline dependencies; add catalog
+   entries required by any additional opt-in submodule projects.
 6. Enable Corepack once, install, and verify the selected pnpm version:
 
    ```sh
@@ -58,6 +67,7 @@ The script derives the Node.js major and aligns the catalog automatically:
    ```sh
    pnpm run fix
    pnpm run validate
+   pnpm run zizmor
    pnpm run format:check
    git diff --check
    git status --short
