@@ -40,7 +40,7 @@ The `~/.agents/` directory is the **central hub** on each machine — also a git
 │
 ├── .agents/                          # central hub (git repo for backup)
 │   ├── AGENTS.md                     # copied from template(s)
-│   └── skills/                       # merged skills only (no prompt templates)
+│   └── skills/                       # merged reusable skills only
 │       ├── third-party-skill/        # installed independently
 │       │   └── SKILL.md
 │       ├── universal-skill-1 ------> ~/workspace/agent-stuff/skills/universal-skill-1
@@ -60,13 +60,29 @@ The `~/.agents/` directory is the **central hub** on each machine — also a git
 │           └── SKILL.md
 │
 ├── .codex/
-│   └── AGENTS.md                     # copied from template(s)
+│   ├── AGENTS.md                     # copied from template(s)
+│   └── skills/                       # regular skill symlinks + prompt adapters
+│       └── explore/
+│           ├── SKILL.md
+│           └── agents/openai.yaml    # allow_implicit_invocation: false
+│
+├── .copilot/
+│   └── skills/                       # personal prompt adapters
+│       └── explore/
+│           └── SKILL.md              # disable-model-invocation: true
 │
 ├── .github/
 │   ├── AGENTS.md                     # copied from template(s)
-│   └── skills/                       # real dir: individual skill symlinks only
+│   └── skills/                       # regular skill symlinks + prompt adapters
 │       ├── universal-skill-1 ------> ~/.agents/skills/universal-skill-1
-│       └── ...
+│       └── explore/
+│           └── SKILL.md              # disable-model-invocation: true
+│
+├── .gemini/
+│   ├── AGENTS.md
+│   └── commands/                     # strict manual-only prompt adapters
+│       ├── .sync-managed-prompts
+│       └── explore.toml
 │
 └── .pi/
     └── agent/
@@ -87,7 +103,7 @@ The `~/.agents/` directory is the **central hub** on each machine — also a git
 2. **Central hub → agent directories.**
    Each agent gets a **real** `skills/` directory containing **individual symlinks** to each skill in `~/.agents/skills/`. This avoids a directory-level symlink, keeping the central hub clean and allowing agent-specific additions (like Claude Code's prompt template skills) without polluting other agents.
 
-### Prompt templates: copied to Pi, converted to skills for Claude Code
+### Prompt templates: generated through agent-specific adapters
 
 Prompt templates are synced differently to each tool because of format differences:
 
@@ -100,9 +116,16 @@ Prompt templates are synced differently to each tool because of format differenc
 | Wrap in `name/SKILL.md` directory structure | `explore.md` → `explore/SKILL.md` |
 | Add `disable-model-invocation: true` to frontmatter | User-only invocation via `/name` |
 | Shift positional args from 1-based to 0-based | `$1` → `$0`, `$2` → `$1` |
+| Render Pi argument slices as instructions over `$ARGUMENTS` | `${@:2}` → arguments starting at position 2 |
 | Replace `$@` with `$ARGUMENTS` | Pi alias → Claude Code equivalent |
 
-A `.sync-managed-prompts` manifest in each target tracks which files/directories are managed, enabling stale cleanup when templates are removed from the source.
+**GitHub Copilot** — Each template becomes a user-invocable personal skill in `~/.copilot/skills/`, with a mirror in `~/.github/skills/` for the existing GitHub-agent setup. `disable-model-invocation: true` prevents automatic loading, while trailing command text supplies invocation context.
+
+**Codex** — Each template becomes a skill in `~/.codex/skills/`. Its `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, so the prompt is available through an explicit `$name` mention without implicit matching.
+
+**Gemini CLI** — Each template becomes a native TOML command in `~/.gemini/commands/`. This preserves strict manual-only behavior because Gemini does not honor skill invocation-policy fields.
+
+A `.sync-managed-prompts` manifest in each target tracks which files or directories are managed, enabling stale cleanup when templates are removed from the source. An unmanaged skill or Gemini command with the same name causes the sync to stop instead of overwriting it.
 
 ### Instructions: copied with renaming
 
@@ -124,7 +147,7 @@ The script is idempotent — safe to run repeatedly.
 
 ## Prompt template format
 
-Prompt templates are Markdown files invoked via `/name` in the editor (both Pi and Claude Code). The canonical format **always** includes YAML frontmatter and uses **Pi's 1-based** positional argument syntax:
+Prompt templates are Markdown files invoked explicitly in each agent. The canonical format **always** includes YAML frontmatter and uses **Pi's 1-based** positional argument syntax:
 
 ```markdown
 ---
@@ -136,7 +159,7 @@ Template body with $1 positional arguments and $@ for all args...
 
 Supported argument syntax in canonical format: `$1`, `$2`, `$@` / `$ARGUMENTS`, `${@:N}`, `${@:N:L}`.
 
-The sync script automatically transforms positional args to Claude Code's 0-based syntax and adds `disable-model-invocation: true` when creating skill directories.
+The sync script adapts invocation policy and arguments for each target. Prefer `$ARGUMENTS` when a prompt can consume the invocation as one value; positional syntax requires the generated Copilot, Codex, and Gemini adapters to explain how the model should parse the supplied input.
 
 ## Adding a universal skill
 
@@ -160,4 +183,4 @@ Place (or install) it directly into `~/.agents/skills/`. It sits alongside the s
 
 ## Adding a third-party prompt template
 
-Place the `.md` file directly into `~/.pi/agent/prompts/` (for Pi) or create a skill directory in `~/.claude/skills/` (for Claude Code). Files/directories not listed in `.sync-managed-prompts` are left untouched by the sync script.
+Place the artifact directly in the target agent's prompt, command, or skills directory. Files and directories not listed in `.sync-managed-prompts` are left untouched by the sync script.

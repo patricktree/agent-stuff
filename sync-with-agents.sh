@@ -6,9 +6,11 @@ CENTRAL_SKILLS_DIR="${HOME}/.agents/skills"
 AGENTS_DIR="${HOME}/.agents"
 CLAUDE_DIR="${HOME}/.claude"
 CODEX_DIR="${HOME}/.codex"
+COPILOT_DIR="${HOME}/.copilot"
 GITHUB_DIR="${HOME}/.github"
 GEMINI_DIR="${HOME}/.gemini"
 GEMINI_CONFIG_DIR="${GEMINI_DIR}/config"
+GEMINI_COMMANDS_DIR="${GEMINI_DIR}/commands"
 PI_DIR="${HOME}/.pi/agent"
 
 # --- Collect all skill and prompt source repos: this repo + any extras passed as args ---
@@ -36,7 +38,7 @@ for arg in "$@"; do
 done
 
 # --- Build AGENTS.md: base + optional platform additions from extra repos ---
-mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${GITHUB_DIR}" "${GEMINI_DIR}" "${GEMINI_CONFIG_DIR}" "${PI_DIR}"
+mkdir -p "${AGENTS_DIR}" "${CLAUDE_DIR}" "${CODEX_DIR}" "${COPILOT_DIR}/skills" "${GITHUB_DIR}" "${GEMINI_DIR}" "${GEMINI_CONFIG_DIR}" "${GEMINI_COMMANDS_DIR}" "${PI_DIR}"
 
 AGENTS_CONTENT=$(mktemp)
 cp "${SCRIPT_DIR}/AGENTS.template.md" "${AGENTS_CONTENT}"
@@ -73,15 +75,16 @@ done
 
 # --- Symlink individual skills from central hub into each agent's skills dir ---
 # Each agent gets a real directory with per-skill symlinks (not a directory symlink).
-# This keeps the central hub clean and allows agent-specific additions (e.g. prompt
-# template skills for Claude Code) without polluting other agents.
+# This keeps the central hub clean and allows agent-specific prompt adapters
+# without exposing them to agents that interpret invocation policy differently.
 MANAGED_PROMPTS=".sync-managed-prompts"
 
 # Clean up prompt template skills previously placed in central hub (migration)
 CENTRAL_MANAGED="${CENTRAL_SKILLS_DIR}/${MANAGED_PROMPTS}"
 if [[ -f "${CENTRAL_MANAGED}" ]]; then
   while IFS= read -r dname; do
-    rm -rf "${CENTRAL_SKILLS_DIR}/${dname}"
+    [[ -n "${dname}" ]] || continue
+    rm -rf "${CENTRAL_SKILLS_DIR:?}/${dname}"
   done < "${CENTRAL_MANAGED}"
   rm -f "${CENTRAL_MANAGED}"
 fi
@@ -96,7 +99,8 @@ for agent_skills_dir in "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_D
   managed_file="${agent_skills_dir}/${MANAGED_PROMPTS}"
   if [[ -f "${managed_file}" ]]; then
     while IFS= read -r dname; do
-      rm -rf "${agent_skills_dir}/${dname}"
+      [[ -n "${dname}" ]] || continue
+      rm -rf "${agent_skills_dir:?}/${dname}"
     done < "${managed_file}"
   fi
   rm -f "${managed_file}"
@@ -115,12 +119,11 @@ for agent_skills_dir in "${CLAUDE_DIR}/skills" "${CODEX_DIR}/skills" "${GITHUB_D
   done
 done
 
-# --- Sync prompt templates ---
-# Pi: copy as-is (canonical format, 1-based positional args).
-# Claude Code: create skill dirs in ~/.claude/skills/ with transformed SKILL.md
-#   - Adds disable-model-invocation: true to frontmatter
-#   - Shifts positional args from 1-based to 0-based ($1 → $0)
-#   - Replaces $@ with $ARGUMENTS
+# --- Sync prompt templates through agent-specific adapters ---
+# Pi keeps native prompt templates so /name and one-based substitutions work.
+# Claude Code and GitHub Copilot receive manual-only skills.
+# Codex receives explicit-only skills using agents/openai.yaml policy.
+# Gemini receives native custom commands because it ignores skill invocation policy.
 PI_PROMPTS_DIR="${PI_DIR}/prompts"
 
 # If Pi prompts dir is a symlink (from a previous sync), replace with real dir
@@ -134,7 +137,7 @@ if [[ -f "${PI_MANAGED}" ]]; then
     rm -f "${PI_PROMPTS_DIR}/${fname}"
   done < "${PI_MANAGED}"
 fi
-> "${PI_MANAGED}"
+: > "${PI_MANAGED}"
 
 # Clean up previously managed Claude Code commands (migration from old approach)
 CLAUDE_CMD_MANIFEST="${CLAUDE_DIR}/commands/.sync-managed"
@@ -145,9 +148,31 @@ if [[ -f "${CLAUDE_CMD_MANIFEST}" ]]; then
   rm -f "${CLAUDE_CMD_MANIFEST}"
 fi
 
-# Write prompt template skills manifest for Claude Code
+# Write manifests for every generated prompt artifact
 CLAUDE_PROMPT_MANAGED="${CLAUDE_DIR}/skills/${MANAGED_PROMPTS}"
-> "${CLAUDE_PROMPT_MANAGED}"
+CODEX_PROMPT_MANAGED="${CODEX_DIR}/skills/${MANAGED_PROMPTS}"
+COPILOT_PROMPT_MANAGED="${COPILOT_DIR}/skills/${MANAGED_PROMPTS}"
+GITHUB_PROMPT_MANAGED="${GITHUB_DIR}/skills/${MANAGED_PROMPTS}"
+GEMINI_PROMPT_MANAGED="${GEMINI_COMMANDS_DIR}/${MANAGED_PROMPTS}"
+
+if [[ -f "${COPILOT_PROMPT_MANAGED}" ]]; then
+  while IFS= read -r dname; do
+    [[ -n "${dname}" ]] || continue
+    rm -rf "${COPILOT_DIR:?}/skills/${dname}"
+  done < "${COPILOT_PROMPT_MANAGED}"
+fi
+
+: > "${CLAUDE_PROMPT_MANAGED}"
+: > "${CODEX_PROMPT_MANAGED}"
+: > "${COPILOT_PROMPT_MANAGED}"
+: > "${GITHUB_PROMPT_MANAGED}"
+
+if [[ -f "${GEMINI_PROMPT_MANAGED}" ]]; then
+  while IFS= read -r fname; do
+    rm -f "${GEMINI_COMMANDS_DIR}/${fname}"
+  done < "${GEMINI_PROMPT_MANAGED}"
+fi
+: > "${GEMINI_PROMPT_MANAGED}"
 
 for source_dir in "${PROMPT_SOURCES[@]}"; do
   for template in "${source_dir}"/*.md; do
@@ -155,29 +180,149 @@ for source_dir in "${PROMPT_SOURCES[@]}"; do
     template_basename="$(basename "${template}")"
     template_name="${template_basename%.md}"
 
+    if [[ ! "${template_name}" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ || ${#template_name} -gt 64 ]]; then
+      echo "Error: prompt name '${template_name}' must be a valid skill name" >&2
+      exit 1
+    fi
+
+    description="$(awk '
+      NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+      in_frontmatter && $0 == "---" { exit }
+      in_frontmatter && /^description:[[:space:]]*/ {
+        sub(/^description:[[:space:]]*/, "")
+        print
+        exit
+      }
+    ' "${template}")"
+    if [[ -z "${description}" ]]; then
+      echo "Error: prompt '${template}' needs a one-line description" >&2
+      exit 1
+    fi
+
     # Pi: copy as-is (canonical format, 1-based args)
     cp "${template}" "${PI_PROMPTS_DIR}/${template_basename}"
     echo "${template_basename}" >> "${PI_MANAGED}"
 
-    # Claude Code: create skill dir with transformed SKILL.md
+    # Claude Code: manual-only skill with zero-based positional arguments
     skill_dir="${CLAUDE_DIR}/skills/${template_name}"
+    if [[ -e "${skill_dir}" || -L "${skill_dir}" ]] && ! grep -Fxq "${template_name}" "${CLAUDE_PROMPT_MANAGED}"; then
+      echo "Error: prompt '${template_name}' conflicts with an unmanaged Claude skill" >&2
+      exit 1
+    fi
+    rm -rf "${skill_dir}"
     mkdir -p "${skill_dir}"
-    perl -pe '
+    PROMPT_SKILL_NAME="${template_name}" perl -pe '
       BEGIN { $in_fm = 0; $fm_done = 0 }
       if (/^---\s*$/ && !$fm_done) {
         if (!$in_fm) {
           $in_fm = 1;
+          $_ = "---\nname: $ENV{PROMPT_SKILL_NAME}\n";
         } else {
           $in_fm = 0;
           $fm_done = 1;
           $_ = "disable-model-invocation: true\n---\n";
         }
       } elsif ($fm_done) {
+        s/\$\{\@:(\d+):(\d+)\}/"the next $2 invocation arguments starting at position $1 (from `\$ARGUMENTS`)"/ge;
+        s/\$\{\@:(\d+)\}/"the invocation arguments starting at position $1 (from `\$ARGUMENTS`)"/ge;
         s/\$(\d+)/"\$" . ($1-1)/ge;
         s/\$\@/\$ARGUMENTS/g;
       }
     ' "${template}" > "${skill_dir}/SKILL.md"
     echo "${template_name}" >> "${CLAUDE_PROMPT_MANAGED}"
+
+    # GitHub Copilot: manual-only skill; invocation text arrives as user context
+    skill_dir="${GITHUB_DIR}/skills/${template_name}"
+    if [[ -e "${skill_dir}" || -L "${skill_dir}" ]] && ! grep -Fxq "${template_name}" "${GITHUB_PROMPT_MANAGED}"; then
+      echo "Error: prompt '${template_name}' conflicts with an unmanaged GitHub Copilot skill" >&2
+      exit 1
+    fi
+    rm -rf "${skill_dir}"
+    mkdir -p "${skill_dir}"
+    PROMPT_SKILL_NAME="${template_name}" perl -pe '
+      BEGIN { $in_fm = 0; $fm_done = 0 }
+      if (/^---\s*$/ && !$fm_done) {
+        if (!$in_fm) {
+          $in_fm = 1;
+          $_ = "---\nname: $ENV{PROMPT_SKILL_NAME}\n";
+        } else {
+          $in_fm = 0;
+          $fm_done = 1;
+          $_ = "disable-model-invocation: true\nuser-invocable: true\n---\n\nInvocation arguments are supplied as trailing user context. In the template below, interpret `\$1` as the first argument, `\$2` as the second, `\$@` or `\$ARGUMENTS` as all arguments, and `\${\@:N}` as arguments starting at position N.\n";
+        }
+      }
+    ' "${template}" > "${skill_dir}/SKILL.md"
+    echo "${template_name}" >> "${GITHUB_PROMPT_MANAGED}"
+
+    # Personal Copilot skills use ~/.copilot/skills; keep ~/.github/skills as a mirror
+    skill_dir="${COPILOT_DIR}/skills/${template_name}"
+    if [[ -e "${skill_dir}" || -L "${skill_dir}" ]] && ! grep -Fxq "${template_name}" "${COPILOT_PROMPT_MANAGED}"; then
+      echo "Error: prompt '${template_name}' conflicts with an unmanaged personal Copilot skill" >&2
+      exit 1
+    fi
+    rm -rf "${skill_dir}"
+    mkdir -p "${skill_dir}"
+    cp "${GITHUB_DIR}/skills/${template_name}/SKILL.md" "${skill_dir}/SKILL.md"
+    echo "${template_name}" >> "${COPILOT_PROMPT_MANAGED}"
+
+    # Codex: explicit-only skill with product-specific invocation policy
+    skill_dir="${CODEX_DIR}/skills/${template_name}"
+    if [[ -e "${skill_dir}" || -L "${skill_dir}" ]] && ! grep -Fxq "${template_name}" "${CODEX_PROMPT_MANAGED}"; then
+      echo "Error: prompt '${template_name}' conflicts with an unmanaged Codex skill" >&2
+      exit 1
+    fi
+    rm -rf "${skill_dir}"
+    mkdir -p "${skill_dir}/agents"
+    PROMPT_SKILL_NAME="${template_name}" perl -pe '
+      BEGIN { $in_fm = 0; $fm_done = 0 }
+      if (/^---\s*$/ && !$fm_done) {
+        if (!$in_fm) {
+          $in_fm = 1;
+          $_ = "---\nname: $ENV{PROMPT_SKILL_NAME}\n";
+        } else {
+          $in_fm = 0;
+          $fm_done = 1;
+          $_ = "---\n\nInvocation arguments are supplied with the explicit skill mention. In the template below, interpret `\$1` as the first argument, `\$2` as the second, `\$@` or `\$ARGUMENTS` as all arguments, and `\${\@:N}` as arguments starting at position N.\n";
+        }
+      }
+    ' "${template}" > "${skill_dir}/SKILL.md"
+    printf 'policy:\n  allow_implicit_invocation: false\n' > "${skill_dir}/agents/openai.yaml"
+    echo "${template_name}" >> "${CODEX_PROMPT_MANAGED}"
+
+    # Gemini: native custom command with explicit full-argument injection
+    command_filename="${template_name}.toml"
+    command_file="${GEMINI_COMMANDS_DIR}/${command_filename}"
+    if [[ -e "${command_file}" ]] && ! grep -Fxq "${command_filename}" "${GEMINI_PROMPT_MANAGED}"; then
+      echo "Error: prompt '${template_name}' conflicts with an unmanaged Gemini command" >&2
+      exit 1
+    fi
+    escaped_description="$(printf '%s' "${description}" | perl -pe 's/\\/\\\\/g; s/"/\\"/g')"
+    if perl -0ne 'exit(index($_, "\x27\x27\x27") >= 0 ? 0 : 1)' "${template}"; then
+      echo "Error: prompt '${template}' contains a TOML multiline literal delimiter" >&2
+      exit 1
+    fi
+    {
+      printf 'description = "%s"\n' "${escaped_description}"
+      printf "prompt = '''\n"
+      printf 'Invocation arguments: {{args}}\n\n'
+      printf '%s\n\n' "In the template below, interpret \`\$1\` as the first argument, \`\$2\` as the second, \`\$@\` or \`\$ARGUMENTS\` as all arguments, and \`\${@:N}\` as arguments starting at position N."
+      perl -ne '
+        if (/^---\s*$/ && !$frontmatter_done) {
+          if ($in_frontmatter) {
+            $frontmatter_done = 1;
+          } else {
+            $in_frontmatter = 1;
+          }
+          next;
+        }
+        if ($frontmatter_done) {
+          s/\$ARGUMENTS|\$\@/{{args}}/g;
+          print;
+        }
+      ' "${template}"
+      printf "'''\n"
+    } > "${command_file}"
+    echo "${command_filename}" >> "${GEMINI_PROMPT_MANAGED}"
   done
 done
 
@@ -188,10 +333,11 @@ mkdir -p "${PI_EXTENSIONS_DIR}"
 
 if [[ -f "${PI_EXTENSIONS_MANAGED}" ]]; then
   while IFS= read -r extension_name; do
-    rm -rf "${PI_EXTENSIONS_DIR}/${extension_name}"
+    [[ -n "${extension_name}" ]] || continue
+    rm -rf "${PI_EXTENSIONS_DIR:?}/${extension_name}"
   done < "${PI_EXTENSIONS_MANAGED}"
 fi
-> "${PI_EXTENSIONS_MANAGED}"
+: > "${PI_EXTENSIONS_MANAGED}"
 
 for source_dir in "${PI_EXTENSION_SOURCES[@]}"; do
   [[ -d "${source_dir}" ]] || continue
