@@ -7,9 +7,9 @@ description: Enforces safe git workflow boundaries. Use when running git command
 
 Use this before running git workflow commands that can change repository state.
 
-## Read-only by default
+## Operations allowed without confirmation
 
-`git status`, `git diff`, and `git log` are always safe. Everything else requires explicit user consent.
+Read-only inspection, all `git pull` operations, and submodule initialization are preauthorized when relevant to the task. Run them without requesting confirmation. This includes pull's merge or rebase integration, `git submodule init`, and `git submodule update --init` with optional `--recursive`. Other Git changes require explicit user consent.
 
 For big reviews, prefer:
 
@@ -19,9 +19,9 @@ git --no-pager diff --color=never
 
 ## Consent rules
 
-- Do not commit, amend, branch, pull, push, rebase, merge, stash, restore, reset, clean, remove, or switch worktrees unless the user explicitly asks.
+- Outside the preauthorized operations above, do not commit, amend, branch, push, rebase, merge, stash, restore, reset, clean, remove, or switch worktrees unless the user explicitly asks.
 - If the user types a command such as "pull and push", that is consent for that command.
-- If the requested operation could overwrite or discard uncommitted work, stop and ask before proceeding.
+- Preserve uncommitted work. If Git refuses a pull or submodule initialization because local changes would be overwritten, ask how to handle those changes instead of forcing the operation or discarding them.
 
 ## Branch safety
 
@@ -32,7 +32,7 @@ git --no-pager diff --color=never
 ## Push and pull
 
 - Push only when the user explicitly asks.
-- Pull only when the user explicitly asks.
+- Pull without confirmation when relevant to the task; the permission includes pull options such as `--rebase` and `--autostash`.
 - Before pull, push, rebase, or merge, inspect the working tree with `git status`.
 
 ## Destructive operations

@@ -12,7 +12,7 @@ These are Patrick's shared defaults for all coding-agent work.
 
 - Keep `sleep` calls at 120 seconds or less.
 - Keep lint rules, type checks, and tests enabled; fix underlying failures and ask before adding an exception or changing linting or compiler settings.
-- Get explicit user approval before committing, amending, pushing, branching, pulling, rebasing, merging, stashing, restoring, resetting, cleaning, removing, or switching worktrees; use `commit` and `safe-git-practices` for approved Git changes.
+- Pulls (including their merge or rebase integration) and Git submodule initialization are preauthorized. Outside those operations, get explicit user approval before committing, amending, pushing, branching, rebasing, merging, stashing, restoring, resetting, cleaning, removing, or switching worktrees; use `commit` and `safe-git-practices` for Git changes.
 - Keep Git remotes under `~/workspace`.
 - Include this trailer in every commit message: `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`.
 
