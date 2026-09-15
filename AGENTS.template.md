@@ -21,10 +21,6 @@ These are Patrick's shared defaults for all coding-agent work.
 - If `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once per session.
 - Before the first `pnpm` command, run `corepack enable` once per session; use the `pnpm` skill for package-manager details.
 
-## Validation
-
-- Before handoff, run the repository's documented format, build, typecheck, lint, and test checks when applicable.
-
 ## Conditional references
 
 - For persistent code edits, use the `code-style` skill.
