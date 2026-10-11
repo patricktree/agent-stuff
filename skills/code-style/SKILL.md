@@ -1,6 +1,6 @@
 ---
 name: code-style
-description: Captures a personal TypeScript, React, testing, file layout, naming, comments, error handling, defensive-programming, and package.json code style. Use when writing or editing code files, implementing features, refactoring modules, adding tests, or updating package.json so persistent code stays consistent with this personal style. Not needed for throwaway code evaluated via bash.
+description: Code style. Use when writing code or editing package.json. Not needed for throwaway code (e.g. code evaluated via bash).
 ---
 
 # Code Style
@@ -24,8 +24,6 @@ Apply this personal code style when writing or editing persistent code files.
 - Keep control flow shallow when possible.
 - Keep functions tight and cohesive, with clear names and tight invariants.
 - Preserve observability: errors and important state transitions should be easy to understand.
-- Avoid speculative abstraction: inline obvious one-use code; extract only for reuse, domain meaning, or to simplify dense logic.
-- Add abstraction only when it has clear reuse value or models a real domain concept.
 
 ## Naming
 
@@ -44,19 +42,36 @@ Examples:
 
 ## File layout
 
-- Keep one primary concern per file.
 - Order files predictably:
   1. imports
   2. exported types that define the module's public contract
-  3. constants and exported functions or components
-  4. internal helper functions
-  5. styled components or presentation-only helpers
-- Put only exported types near the top of the file.
-- Colocate non-exported types with the function, component, or helper that uses them, so private implementation details stay contextual instead of looking like module-level API.
+  3. constants and exported symbols
+  4. internals (e.g. helper functions)
+- Colocate non-exported types with the function, component, or helper that uses them.
 - Colocate small helpers or wrappers when they are tightly coupled to one component or module.
 - Extract shared primitives such as `Anchor`, `Button`, or `Image` when they standardize framework usage.
 - Do not introduce barrel files such as `index.ts` or `index.tsx` by default.
 - Prefer direct imports from the defining module unless the local codebase already uses barrels consistently or a package-level public API genuinely benefits from one.
+
+### Statement spacing
+
+- Separate logical blocks of statements with one blank line inside functions and other blocks.
+- Keep tightly related statements together within each block; use spacing to reveal the structure rather than adding a blank line after every statement.
+
+```typescript
+const params = parseInput(input);
+const { sourceUrl } = params;
+
+if (params.conversionId !== instanceId)
+  throw new Error("Conversion identity mismatch");
+
+const owner = params.owner;
+const artifactPrefix = createConversionArtifactPrefix(instanceId, owner);
+
+const bucket = createArtifactBucket(owner, artifactPrefix);
+
+return runConversion(sourceUrl, bucket);
+```
 
 ## Comments
 
@@ -77,12 +92,23 @@ Avoid:
 - comments that restate the next line of code
 - generic section comments that add no information
 
+### Action at a distance
+
+Comment every **action at a distance**: a line whose reason lives in code elsewhere, such as a declaration that exists only to serve a descendant, a sibling, or another module. Put the comment on that line and name the other site and what it relies on, so the line reads as load-bearing rather than unused.
+
+```css
+.card {
+  /* containing block for the absolutely positioned `.badge` */
+  position: relative;
+}
+```
+
 ## Defensive programming and error handling
 
 - Validate assumptions early, especially at boundaries.
 - Prefer crashing fast over trying to keep the program alive at all costs when invariants break or required data is missing.
 - Throw with explicit, actionable error messages when required data or invariants are missing.
-- Use `invariant(...)` for internal guarantees when that matches the repo.
+- Use `invariant(...)` or `assert(...)` for internal guarantees and TypeScript type narrowing when that matches the repo.
 - Use exhaustive checks such as `assertUnreachable(...)` for impossible states.
 - Do not silently swallow invalid input.
 - Do not add defensive fallback behavior that hides corrupted state, broken assumptions, or programmer errors.
@@ -103,11 +129,10 @@ Avoid:
 ## React
 
 - Use function components.
-- Keep components focused and single-purpose.
 - Extract context providers only when state is meaningfully shared.
 - Prefer explicit prop types and state names.
 - Name non-trivial effects and helpers clearly.
-- Colocate styled components in the same file when they only serve that component.
+- Colocate styled components and styles in the same file when they only serve that component.
 - For RSC-enabled frameworks (like Next.js), add `'use client'` only where required.
 
 ## Tests
@@ -118,18 +143,6 @@ Avoid:
 - Allow duplication to occur in tests when it improves readability and intent.
 - Keep setup local unless repeated enough to justify extraction.
 - Add helpers such as `expectRejection(...)` only when they simplify repeated patterns without hiding intent.
-
-## Avoid
-
-- vague names
-- deep nesting when a guard clause would do
-- comments that only narrate the code
-- clever abstractions without strong payoff
-- broad configurable components with unclear boundaries
-- unnecessary type gymnastics
-- magical test helpers
-- nested `describe(...)` trees by default
-- new barrel files without a clear package API boundary or an existing local convention
 
 ## package.json
 
