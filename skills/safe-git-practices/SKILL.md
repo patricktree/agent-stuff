@@ -9,7 +9,7 @@ Use this before running git workflow commands that can change repository state.
 
 ## Operations allowed without confirmation
 
-Read-only inspection, all `git pull` operations, and submodule initialization are preauthorized when relevant to the task. Run them without requesting confirmation. This includes pull's merge or rebase integration, `git submodule init`, and `git submodule update --init` with optional `--recursive`. Other Git changes require explicit user consent.
+Read-only inspection, all `git pull` operations, submodule initialization, and new commits on a branch other than the default branch are preauthorized when relevant to the task. Run them without requesting confirmation. This includes pull's merge or rebase integration, `git submodule init`, `git submodule update --init` with optional `--recursive`, and commits on a worktree branch. Commits on the default branch, amends, and other Git changes require explicit user consent.
 
 For big reviews, prefer:
 
@@ -19,7 +19,7 @@ git --no-pager diff --color=never
 
 ## Consent rules
 
-- Outside the preauthorized operations above, do not commit, amend, branch, push, rebase, merge, stash, restore, reset, clean, remove, or switch worktrees unless the user explicitly asks.
+- Outside the preauthorized operations above, do not commit on the default branch, amend, branch, push, rebase, merge, stash, restore, reset, clean, remove, or switch worktrees unless the user explicitly asks.
 - If the user types a command such as "pull and push", that is consent for that command.
 - Preserve uncommitted work. If Git refuses a pull or submodule initialization because local changes would be overwritten, ask how to handle those changes instead of forcing the operation or discarding them.
 

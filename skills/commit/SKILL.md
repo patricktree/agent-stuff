@@ -20,7 +20,7 @@ Review the last 30 commit messages to match the existing style:
 git log --oneline -30
 ```
 
-**Never commit, amend, or push unless the user explicitly asks.** No auto-commits after checks pass, no "let me commit this" — wait for the user to say "commit", "commit and push", etc.
+**On a branch other than the default branch (such as a worktree branch), commit finished work without asking.** On the default branch, commit only when the user explicitly asks ("commit", "commit and push", etc.). Amend or push only when the user explicitly asks.
 
 ## Commit Message Format
 
