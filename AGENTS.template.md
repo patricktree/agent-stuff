@@ -26,3 +26,4 @@ These are Patrick's shared defaults for all coding-agent work.
 - For persistent code edits, use the `code-style` skill.
 - For GitHub issue, pull request, CI, or release work, use `gh` rather than web search.
 - Use Node.js rather than Python for small one-off scripts.
+- For review diffs (`code-review`, `find-bugs`, and the diff commands you pass to review subagents), append the pathspec `-- . ':(exclude,attr:linguist-generated=true)'` so files marked as generated in `.gitattributes` stay out of the diff.
