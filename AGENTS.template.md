@@ -7,14 +7,11 @@ These are Patrick's shared defaults for all coding-agent work.
 - Contact: Patrick Kerschbaum (website <https://patricktree.me>, email <patrick.kerschbaum@gmail.com>, X `@patricktree_`, GitHub `patricktree`, Bluesky `patricktree.me`).
 - Treat files in `~/.agents/`, `~/.claude/`, `~/.codex/`, `~/.gemini/`, `~/.github/`, and `~/.pi/` as synced outputs, not sources.
 - Before editing a skill (`SKILL.md`) or prompt template, read `~/workspace/agent-stuff/README.md`; edit the canonical source under `~/workspace/agent-stuff/` or the relevant device repo, then run `sync-with-agents.sh` with the relevant sources.
+- Keep Git remotes under `~/workspace`.
 
 ## Guardrails
 
-- Keep `sleep` calls at 120 seconds or less.
 - Keep lint rules, type checks, and tests enabled; fix underlying failures and ask before adding an exception or changing linting or compiler settings.
-- Pulls (including their merge or rebase integration), Git submodule initialization, and new commits on a branch other than the default branch (such as a worktree branch) are preauthorized. Outside those operations, get explicit user approval before committing, amending, pushing, branching, rebasing, merging, stashing, restoring, resetting, cleaning, running `git rm`, or switching worktrees; use `commit` and `safe-git-practices` for Git changes. Delete obsolete files from the working tree and leave staging the deletion to the user.
-- Keep Git remotes under `~/workspace`.
-- Include this trailer in every commit message: `Co-authored-by: patricktree-agents[bot] <2968297+patricktree-agents[bot]@users.noreply.github.com>`.
 
 ## Session setup
 
@@ -24,6 +21,5 @@ These are Patrick's shared defaults for all coding-agent work.
 ## Conditional references
 
 - For persistent code edits, use the `code-style` skill.
-- For GitHub issue, pull request, CI, or release work, use `gh` rather than web search.
 - Use Node.js rather than Python for small one-off scripts.
 - For review diffs (`code-review`, `find-bugs`, and the diff commands you pass to review subagents), append the pathspec `-- . ':(exclude,attr:linguist-generated=true)'` so files marked as generated in `.gitattributes` stay out of the diff.
