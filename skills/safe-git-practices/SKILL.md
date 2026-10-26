@@ -21,7 +21,7 @@ Every other operation that changes repository state runs only when the user expl
 
 ## Destructive operations
 
-`git reset --hard`, `git clean`, `git restore`, and `git rm` discard work. Run one only when the user asks for that specific operation; when that consent is ambiguous, ask a clarifying question.
+Operations that discard uncommitted changes, commits, or remote history are destructive: `git reset --hard`, `git clean`, `git restore`, `git checkout -- <path>`, `git rm`, `git branch -D`, `git stash drop` or `clear`, and `git push --force` or `--force-with-lease`. Run one only when the user asks for that specific operation, so consent to push is not consent to force-push; when that consent is ambiguous, ask a clarifying question.
 
 ## Protect existing work
 
