@@ -13,13 +13,13 @@ Check what goes into the commit:
 
 ```bash
 git status
-git diff
+git diff HEAD
 ```
 
-Read the last 30 commit messages to learn the repository's commit style:
+Read the last 30 commit messages, bodies included, to learn the repository's commit style:
 
 ```bash
-git log --oneline -30
+git log -30 --format='%s%n%n%b%n---'
 ```
 
 ## Message format
