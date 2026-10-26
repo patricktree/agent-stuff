@@ -7,11 +7,9 @@ description: Write or edit Markdown with one source line per prose paragraph, th
 
 ## Source layout
 
-- Keep each prose paragraph on one source line. Let the Markdown renderer wrap it visually.
+- Keep each prose paragraph on one source line and let the renderer wrap it. Wrap at a column limit only when the user or repository requires one, e.g. through `MD013` in its markdownlint config.
 - Keep each list item on one source line unless it contains a nested block or another structure that requires multiple lines.
-- Do not hard-wrap prose to a column limit unless the user or repository explicitly requires it.
-- Preserve newlines that carry Markdown meaning, including headings, blank lines between blocks, list boundaries, table rows, block quotes, fenced code blocks, and deliberate hard breaks.
-- Preserve intentional multiline code and shell command continuations.
+- Preserve newlines that carry Markdown meaning, including headings, blank lines between blocks, list boundaries, table rows, block quotes, code blocks, and deliberate hard breaks.
 
 ## Validate changes
 
@@ -22,6 +20,6 @@ description: Write or edit Markdown with one source line per prose paragraph, th
    pnpm dlx markdownlint-cli2 --config ~/.agents/skills/write-markdown/.markdownlint-cli2.jsonc --fix README.md
    ```
 
-   Replace `README.md` with the changed Markdown paths. Pass multiple paths in one command when applicable.
+   Replace `README.md` with the changed Markdown paths, all in one command. The `--config` file is only the base: a markdownlint config in the repository overrides it.
 
-3. Fix any remaining issues without introducing hard-wrapped prose.
+3. Fix remaining issues by hand, keeping prose unwrapped, until markdownlint reports 0 issues.
