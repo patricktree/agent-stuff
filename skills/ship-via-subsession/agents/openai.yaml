@@ -1,0 +1,5 @@
+interface:
+  display_name: "Ship via subsession"
+  short_description: "Implement a change and open a PR from an interactive session"
+policy:
+  allow_implicit_invocation: false
