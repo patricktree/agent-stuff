@@ -1,129 +1,77 @@
 ---
 name: clean-architecture
-description: Guides Clean Architecture design, review, and refactoring. Use when asked to apply Clean Architecture, Ports and Adapters, Hexagonal Architecture, Onion Architecture, dependency inversion across layers, or to separate business logic from frameworks, UI, databases, and external services. Also use when reviewing boundaries, use cases, repositories, controllers, entities, or explaining how layered architecture improves testing and debugging.
+description: Design, review, or refactor code with Clean Architecture (Hexagonal, Ports and Adapters, Onion) boundaries.
+disable-model-invocation: true
 ---
 
 # Clean Architecture
 
-Use this skill when the user wants to design, review, refactor, or explain a codebase using Clean Architecture.
+Clean Architecture is a dependency-management tool, not a layer count. Its one non-negotiable rule is the **dependency rule**: source code dependencies point inward toward higher-level policy, even where control flow runs outward. Inner layers declare ports; outer layers implement them; runtime wiring connects the two.
 
-## Goals
+## Layers
 
-- Keep business rules independent from frameworks and infrastructure details.
-- Make dependencies point inward toward higher-level policy.
-- Preserve testability, replaceability, and predictable debugging paths.
-- Keep architecture practical; do not add layers that do not earn their cost.
+Map the codebase's existing names onto these responsibilities rather than renaming to match:
 
-## Core rules
+| Layer | Owns | Knows about |
+| --- | --- | --- |
+| Entities | Core business concepts and invariants; changes least often | business concepts only |
+| Use cases / application | Application-specific workflows, authorization decisions, orchestration of entities and ports | entities and the ports it declares |
+| Interface adapters | Controllers, presenters, mappers, repository adapters, serializers, authentication/session lookup | use cases and external formats |
+| Frameworks / drivers | Web framework, database, queues, filesystem, SDKs, CLIs; mostly glue | concrete tools |
 
-1. Apply the dependency rule: source code dependencies must point inward.
-2. Keep entities and use cases free of framework, database, transport, and UI details.
-3. Cross boundaries with interfaces, simple request/response models, or plain data structures.
-4. Keep controllers, presenters, repositories, gateways, and framework glue in outer layers.
-5. Do not pass framework objects or ORM rows into inner layers.
-6. Name layers by responsibility, not by technology.
+Data crosses boundaries as plain objects, request/response models, and explicit mapping functions. Persistence models and domain models stay separate shapes even when they look alike.
 
-## Mental model
+Use the smallest structure that preserves the boundaries: in a small app, entities and use cases can share a module; separate packages earn their place as the app grows. Every added layer or interface must pay for itself in dependency control, testability, or replaceability.
 
-Use these layers unless the existing codebase already uses equivalent names:
+## Boundary leaks
 
-| Layer | Responsibility | Should know about |
-|---|---|---|
-| Entities | Core business concepts and invariant rules | business concepts only |
-| Use cases / application | Application-specific workflows and orchestration | entities and boundary interfaces |
-| Interface adapters | Controllers, presenters, mappers, repository adapters | use cases and external formats |
-| Frameworks / drivers | Web framework, database, queues, SDKs, CLIs | concrete tools and glue code |
+Audit for these during design and review:
 
-If the project uses different labels, map them to these responsibilities instead of forcing a rename.
+| If you see... | Leak | Fix |
+| --- | --- | --- |
+| Use case imports web framework, SDK client, or transport types | dependency leak | plain input/output models; a port for the external call |
+| Use case knows SQL, query builders, or SDK pagination details | dependency leak | a repository or gateway port with a domain-shaped method |
+| Entity carries ORM decorators, HTTP helpers, or validation-library types | dependency leak | move mapping and validation glue to an adapter |
+| Business logic throws HTTP status codes or transport errors | boundary leak | domain/application errors, translated to transport errors in the adapter |
+| Controller holds business decisions, persistence, and formatting | mixed responsibilities | orchestration to a use case, formatting to a presenter |
+| Repository returns ORM rows or SDK result shapes | outer format leaking inward | map to a domain/application shape inside the adapter |
+| Framework directory layout dictates where business logic lives | framework coupling | keep the core in its own module; framework integration behind adapters |
 
-## When working on an existing codebase
+## Testing
 
-1. Identify the current dependency direction.
-2. Find business rules mixed with UI, HTTP, database, or SDK code.
-3. Draw the boundary that should exist around entities and use cases.
-4. Introduce interfaces at the seam where inner logic currently depends on an outer detail.
-5. Move translation code outward: HTTP parsing, ORM mapping, serialization, SDK response handling.
-6. Refactor incrementally around one use case at a time.
+- Entities: fast unit tests over pure business rules.
+- Use cases: tests with fake ports for repositories, gateways, clocks, and auth context.
+- Adapters: tests for translation (request parsing, response shaping, ORM and SDK mapping).
+- A few end-to-end tests to verify wiring across boundaries.
 
-## Boundary checks
+If verifying a business rule needs a running web server or database, the boundary is in the wrong place.
 
-Use these checks during design or review:
+## Debugging
 
-| If you see... | Treat it as... | Preferred fix |
-|---|---|---|
-| Use case imports web framework types | dependency leak | replace with plain input/output models |
-| Entity imports ORM decorators or persistence helpers | dependency leak | move persistence mapping to adapter layer |
-| Business logic throws transport-specific errors | boundary leak | introduce domain or application errors |
-| Controller contains authorization, persistence, and formatting logic | mixed responsibilities | move orchestration to use case and formatting to presenter |
-| Repository returns ORM models directly | outer format leaking inward | map to domain/application data shape |
-| Framework dictates package structure of core logic | framework coupling | isolate framework integration behind adapters |
-
-## Debugging heuristics
-
-Clean Architecture helps debugging when traces and failures are predictable. Use this model:
-
-1. Start from the failing entrypoint.
-2. Follow the request through controller or handler, then use case, then repository or gateway.
-3. Identify which layer owns the failure class.
-4. Confirm whether the bug is in validation, authorization, business rules, mapping, or infrastructure.
-
-Use layer ownership to narrow investigation:
+Consistent layer ownership turns error classes into locators. Follow a failure from its entrypoint through controller, use case, and repository or gateway, and use this table to narrow where to look:
 
 | Symptom | Likely layer |
-|---|---|
-| malformed input or request parsing failure | controller / interface adapter |
-| authentication or session lookup failure | controller / interface adapter |
-| authorization decision is wrong | use case / application |
-| core business rule is wrong | entity or use case |
-| SQL, HTTP SDK, filesystem, or queue failure | infrastructure / driver |
-| response shape or view formatting bug | presenter / interface adapter |
+| --- | --- |
+| Malformed input, request parsing, authentication/session lookup | controller / interface adapter |
+| Wrong authorization decision | use case |
+| Wrong business rule | entity or use case |
+| SQL, HTTP SDK, filesystem, or queue failure | framework / driver |
+| Wrong response shape or view formatting | presenter / interface adapter |
 
-When instrumenting traces, keep span names structurally consistent across use cases so traces are easy to scan.
+When instrumenting, give every use case the same span structure (entrypoint → use case → repository/gateway → infrastructure), so traces are scannable and business-rule latency separates from infrastructure latency.
 
-## Testing guidance
+## Refactoring an existing codebase
 
-Prefer tests by layer responsibility:
+Migrate one use case at a time; propose a full rewrite only when the user asks for one and accepts the risk.
 
-- Test entities with fast unit tests over pure business rules.
-- Test use cases with mocked ports for repositories, gateways, clocks, and auth context.
-- Test adapters for translation concerns: request parsing, response shaping, ORM mapping, SDK mapping.
-- Use a smaller number of end-to-end tests to verify wiring across boundaries.
+1. Map current modules onto the layers and note where dependencies point outward.
+2. Pick one high-value, user-visible workflow and identify its entrypoint, business rules, and external dependencies.
+3. Define its plain input and output shapes.
+4. Extract the use case out of framework code.
+5. Declare ports for persistence and external systems at the seam where inner logic touches an outer detail.
+6. Move translation (HTTP parsing, ORM mapping, serialization, SDK handling) into adapters that implement those ports.
+7. Add tests around the extracted logic, then repeat for adjacent use cases.
 
-If a test needs a web server or database to verify a business rule, the boundary is probably in the wrong place.
+## Output
 
-## Refactoring guidance
-
-Prefer this order:
-
-1. Pick one high-value use case.
-2. Write down its input, output, and business rule expectations.
-3. Extract a use case function or service with plain inputs and outputs.
-4. Introduce ports for persistence or external APIs.
-5. Move framework and data-source code into adapters.
-6. Repeat for adjacent use cases.
-
-Avoid a big-bang rewrite unless the user explicitly asks for one and accepts the risk.
-
-## Trade-offs
-
-Call out these trade-offs explicitly:
-
-- Small apps may not need every layer as a separate directory or class.
-- Over-abstracting too early creates ceremony without value.
-- The goal is dependency control, not diagram compliance.
-- A simpler modular architecture is often enough if the same boundaries are preserved.
-
-## What to produce
-
-Adapt to the user's request. Typical outputs include:
-
-- a proposed folder/package structure
-- a dependency-direction review
-- a boundary-leak audit
-- a refactoring plan per use case
-- a mapping of current modules into entities / use cases / adapters / infrastructure
-- an explanation of how the architecture affects testing and debugging
-
-## Reference
-
-Read `references/principles.md` when you need deeper guidance on dependency direction, boundary crossing, debugging implications, and migration heuristics.
+Match the request; typical deliverables are a layer mapping of current modules, a dependency-direction or boundary-leak audit, a proposed module structure, a per-use-case refactoring plan, or an explanation of the testing and debugging effects. Name the trade-offs of any structure you propose.

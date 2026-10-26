@@ -1,19 +1,21 @@
 # Sources
 
 Retrieved: 2026-04-22
+Revised: 2026-10-26
 
 | Source | Trust tier | Confidence | Contribution | Usage constraints |
-|---|---|---:|---|---|
-| https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html | canonical | High | Primary source for dependency rule, concentric layers, boundary crossing via dependency inversion, and simple boundary data guidance. | Conceptual guidance; not a language- or framework-specific implementation guide. |
-| https://blog.sentry.io/why-clean-architecture-makes-debugging-easier/ | secondary | High | Practical source for debugging, trace consistency, layer-specific error ownership, and testability implications. | Vendor blog; operational examples are illustrative rather than universal. |
+| --- | --- | ---: | --- | --- |
+| <https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html> | canonical | High | Primary source for dependency rule, concentric layers, boundary crossing via dependency inversion, and simple boundary data guidance. | Conceptual guidance; not a language- or framework-specific implementation guide. |
+| <https://blog.sentry.io/why-clean-architecture-makes-debugging-easier/> | secondary | High | Practical source for debugging, trace consistency, layer-specific error ownership, and testability implications. | Vendor blog; operational examples are illustrative rather than universal. |
 | README.md | canonical | High | Repository conventions for where skills live and how they are synced. | Repo-local operational guidance only. |
 
 ## Decisions
 
 | Decision | Status | Rationale |
-|---|---|---|
+| --- | --- | --- |
 | Create a provider-agnostic skill under `skills/clean-architecture/` | adopted | Matches repo structure and keeps the skill portable across synced agent environments. |
-| Make the skill a concise guidance skill with one focused reference file | adopted | The domain benefits from a small orchestration file plus optional deeper reference material. |
+| Make the skill a concise guidance skill with one focused reference file | superseded | The reference file mostly restated `SKILL.md` and general knowledge a current model already has. |
+| Keep all guidance in a single `SKILL.md` | adopted | 2026-10-26 revision: folded the unique parts of `references/principles.md` (boundary data shapes, extra leak smells, trace span structure) into `SKILL.md` and removed the duplicate file. |
 | Emphasize dependency direction, boundary leaks, debugging, and testing | adopted | These are the strongest overlapping themes across the two requested articles and are the most actionable for coding agents. |
 | Prescribe exact folder names or framework-specific code patterns | rejected | The sources emphasize dependency rules and responsibility boundaries over a single fixed layout. |
 | Require a large set of supporting examples or scripts | rejected | Not necessary for this skill class; no repeated automation workflow is involved. |
@@ -21,12 +23,12 @@ Retrieved: 2026-04-22
 ## Coverage matrix
 
 | Dimension | Status | Notes |
-|---|---|---|
-| Core Clean Architecture principles | complete | Covered in `SKILL.md` and `references/principles.md`. |
-| Layer responsibilities | complete | Covered with a responsibility table and deeper reference sections. |
-| Boundary crossing and dependency inversion | complete | Covered in the reference file. |
-| Debugging implications | complete | Included in both the main skill and reference file. |
-| Testing implications | complete | Included in both the main skill and reference file. |
+| --- | --- | --- |
+| Core Clean Architecture principles | complete | Covered in `SKILL.md`. |
+| Layer responsibilities | complete | Covered with a responsibility table in `SKILL.md`. |
+| Boundary crossing and dependency inversion | complete | Covered in `SKILL.md` (dependency rule, ports, boundary data). |
+| Debugging implications | complete | Covered in `SKILL.md`. |
+| Testing implications | complete | Covered in `SKILL.md`. |
 | Refactoring and migration guidance | complete | Included as incremental migration guidance. |
 | Trade-offs / over-abstraction warnings | complete | Included to keep the skill pragmatic. |
 
