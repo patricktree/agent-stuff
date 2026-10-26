@@ -9,17 +9,18 @@ Maintain focused Node.js package metadata conventions for TypeScript/ESM package
 In scope:
 
 - Preserve the exact recommendations moved from the original skill.
-- Keep trigger wording precise for package metadata, scripts, exports, imports, files, or Node package entrypoints.
+- Keep trigger wording precise for package metadata, build scripts, exports, files, or Node package entrypoints.
 
 Out of scope:
 
 - pnpm workspace configuration or tsconfig setup.
+- Subpath imports and formatting/linting scripts; `patricktree-monorepo-setup` owns those.
 - Semantic cleanup of recommendations unless requested separately.
 
 ## Users And Trigger Context
 
 - Primary users: coding agents configuring or reviewing JavaScript/TypeScript projects.
-- Common user requests: add, edit, standardize, or review package metadata, scripts, exports, imports, files, or Node package entrypoints.
+- Common user requests: add, edit, standardize, or review package metadata, build scripts, exports, files, or Node package entrypoints.
 - Should not trigger for: unrelated project setup areas covered by sibling skills.
 
 ## Runtime Contract
@@ -66,10 +67,9 @@ Data that must not be stored:
 
 ## Known Limitations
 
-- The split intentionally preserves existing recommendations, including any stale versions or duplicated ESLint rules.
+- None known.
 
 ## Maintenance Notes
 
 - When to update `SKILL.md`: recommendation changes or trigger precision fixes.
-- When to update `SOURCES.md`: when adding provenance or changelog detail.
 - When to update `references/evidence/`: when preserving trigger examples or regression cases.
