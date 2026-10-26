@@ -36,6 +36,7 @@ export async function fetchJson(
 
   throw new Error(
     `Request failed after ${MAX_RETRIES} attempts: url=${url.href}`,
+    { cause: lastError },
   );
 }
 ```
@@ -44,7 +45,7 @@ Why this matches the style:
 
 - explicit names
 - clear constant naming
-- fail-fast error handling
+- fail-fast error handling that keeps the last failure as `cause`
 - straightforward control flow
 - no unnecessary abstraction
 
@@ -92,7 +93,7 @@ Why this matches the style:
 Preferred:
 
 ```ts
-import { expect, test } from "@playwright/test";
+import { expect, test } from "vitest";
 
 import { sequence } from "#pkg/util/numbers.util.js";
 
@@ -155,13 +156,13 @@ Problems:
 Prefer:
 
 ```ts
-type RunOptions = {
+type FetchJsonOptions = {
   signal?: AbortSignal;
 };
 
 export async function fetchJson(
   url: URL,
-  options: RunOptions = {},
+  options: FetchJsonOptions = {},
 ): Promise<unknown> {
   const response = await fetch(url, { signal: options.signal });
 
