@@ -1,77 +1,30 @@
 ---
 name: convert-pdf-to-image
-description: Convert PDF pages to raster image files. Use when asked to convert a PDF to PNG, JPEG, TIFF, or page images; render PDF pages as images; control output DPI, page ranges, or single-page image output.
+description: Rasterize PDF pages to PNG, JPEG, or TIFF files with Poppler's pdftoppm. Use when asked to convert a PDF or selected pages to images, or to render a PDF page as an image at a given DPI.
 ---
 
 # Convert PDF to Image
 
-Convert PDFs to image files with Poppler's `pdftoppm`. Prefer PNG unless the
-user requests another format.
+Render with Poppler's `pdftoppm`. Defaults, unless the user asks otherwise: PNG, 200 DPI (Poppler's own default of 150 is soft), all pages, output in a sibling directory named `<pdf-stem>-images`.
 
 ## Workflow
 
-1. Confirm the input PDF path exists and identify the requested output format,
-   output directory, DPI, and page range.
-2. Ensure `pdftoppm` is available:
+1. Ensure `pdftoppm` is installed: `brew install poppler` on macOS, the `poppler-utils` package on Debian/Ubuntu. Ask before switching to another converter.
+2. Create the output directory first: `pdftoppm` does not create it and exits with `Could not write image`.
+3. Render with an explicit output prefix:
 
    ```sh
-   command -v pdftoppm >/dev/null || brew install poppler
+   pdftoppm -png -r 200 "${input_pdf}" "${output_dir}/page"
    ```
 
-   If Homebrew is not available, install the system Poppler package (for example
-   `poppler-utils` on Debian/Ubuntu) or ask before using another converter.
-3. Create the output directory before rendering.
-4. Use an explicit output prefix so multi-page output is predictable.
-5. Verify generated files before reporting completion.
+   Add `-f <first> -l <last>` for a page range; swap `-png` for `-jpeg` or `-tiff` when requested.
+4. List the output directory and report the actual file paths.
 
-## Commands
+## Output naming
 
-Multi-page PNG output, defaulting to 200 DPI:
+- Page numbers are zero-padded to the digit count of the PDF's last page: a 13-page PDF yields `page-01.png` … `page-13.png`, not `page-1.png`. Glob or list the directory rather than constructing names.
+- For one page as one exact filename, use `-singlefile` with `-f`: `pdftoppm -png -r 200 -f 3 -singlefile in.pdf out/cover` writes `out/cover.png`.
 
-```sh
-input_pdf="input.pdf"
-output_dir="output"
-mkdir -p "${output_dir}"
-pdftoppm -png -r 200 "${input_pdf}" "${output_dir}/page"
-```
+## Encrypted PDFs
 
-This produces files like `output/page-1.png`, `output/page-2.png`, and so on.
-
-Convert a page range:
-
-```sh
-pdftoppm -png -r 200 -f 2 -l 4 "${input_pdf}" "${output_dir}/page"
-```
-
-Convert a single page to one exact file stem without page numbering:
-
-```sh
-pdftoppm -png -r 200 -f 1 -singlefile "${input_pdf}" "${output_dir}/page-1"
-```
-
-Use JPEG or TIFF only when requested:
-
-```sh
-pdftoppm -jpeg -r 200 "${input_pdf}" "${output_dir}/page"
-pdftoppm -tiff -r 200 "${input_pdf}" "${output_dir}/page"
-```
-
-## Options
-
-- Increase sharpness: raise `-r` DPI, commonly `300`.
-- Smaller files: lower `-r` DPI or use `-jpeg`.
-- Selected pages: use `-f <first>` and `-l <last>`.
-- PDF crop box: use `-cropbox`.
-- Hide annotations: use `-hide-annotations`.
-- Grayscale output: use `-gray`.
-- Encrypted PDF: use `-upw` only when the user explicitly provides the password.
-
-## Failure Handling
-
-- If the PDF path is missing, ask for the correct path instead of guessing.
-- If no output location is specified, create a sibling directory named after the
-  PDF stem plus `-images`.
-- If `pdftoppm` reports encryption/password errors, ask the user for the
-  password; do not attempt to bypass protections.
-- If raster output quality is too low, rerun with a higher `-r` value before
-  trying another tool.
+On a password error, ask the user for the password and pass it with `-upw`; leave other protections intact, and keep the password out of files and commit history.

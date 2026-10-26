@@ -9,7 +9,7 @@ Provide a compact, repeatable workflow for converting PDF pages into raster imag
 In scope:
 
 - PDF to PNG, JPEG, or TIFF conversion.
-- DPI, page range, crop box, annotation visibility, grayscale, and single-page output guidance.
+- Default format, DPI, output location, output naming, and single-page output guidance.
 - Installation fallback guidance for missing `pdftoppm`.
 
 Out of scope:
@@ -36,7 +36,7 @@ Authoritative sources:
 
 - `pdftoppm -h` and `pdftoppm -v` output from the installed Poppler package.
 - Local agent-stuff README for skill location and sync workflow.
-- Skill-writer guidance for authoring, trigger optimization, and validation.
+- `writing-for-agents` guidance for authoring and trigger wording.
 
 Useful improvement sources:
 
