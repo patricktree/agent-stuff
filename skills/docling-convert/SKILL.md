@@ -1,107 +1,44 @@
 ---
 name: docling-convert
-description: Convert PDFs and Office documents (DOCX, PPTX, XLSX) into agent-processable Markdown using Docling in Docker. Use when the user asks for Docling, PDF/DOCX/PPTX/XLSX-to-Markdown extraction, structure-aware document conversion, or document conversion that must not depend on local Python. Do not use for PDF page rasterization; use convert-pdf-to-image for PDF-to-PNG/JPEG/TIFF/page-image rendering.
+description: Convert PDFs and Office documents (DOCX, PPTX, XLSX) to Markdown with Docling running in Docker. Use when the user asks for Docling, wants a PDF or Office file extracted to Markdown for reading or processing, needs structure-aware extraction (tables, headings, reading order, OCR for scans), or wants conversion without local Python. For PDF-to-image rendering use convert-pdf-to-image.
 ---
 
 # Docling Convert
 
-Convert PDFs and Office documents to Markdown with Docling in Docker. Do not rely
-on local Python.
+The bundled helper runs Docling inside a locally built Docker image, so conversion never depends on local Python. Docker is the execution boundary: when Docker or a conversion fails, fix that specific error and rerun; Python, `markitdown`, and other converters stay out of the workflow.
 
-## Use This For
+## Run
 
-- PDF, DOCX, PPTX, or XLSX extraction into Markdown for agent processing.
-- Structure-aware conversion where tables, headings, reading order, and optional
-  JSON sidecars matter.
-- Workflows that require Docker instead of local Python packages.
-
-Use `convert-pdf-to-image` instead when the user needs page images, screenshots,
-DPI control, or raster rendering.
-
-## Script
-
-Run the bundled non-interactive helper from this skill directory:
+Run the helper from the user's working directory by its absolute path inside this skill folder, so relative input and output paths resolve against the user's files:
 
 ```sh
-node scripts/docling-convert.mjs --input ./paper.pdf --out-dir ./converted
+node <skill-dir>/scripts/docling-convert.mjs --input ./paper.pdf --out-dir ./converted
 ```
 
-Common variants:
+Pass exactly one output target:
 
-```sh
-node scripts/docling-convert.mjs --input ./paper.pdf --out-dir ./converted --json
-node scripts/docling-convert.mjs --input ./paper.pdf --output ./converted/paper.md --overwrite
-node scripts/docling-convert.mjs --input ./text.pdf --out-dir ./converted -- --no-ocr
-node scripts/docling-convert.mjs --input ./scan.pdf --out-dir ./converted -- --ocr --force-ocr
-```
+- `--out-dir <dir>` writes `<dir>/<input-stem>/<input-stem>.md` plus any `*_artifacts/` assets Docling emits.
+- `--output <file.md>` writes the primary file exactly there, with a sibling `<stem>.json` sidecar and `<stem>-artifacts/` directory when emitted.
 
-## Contract
+Other options:
 
-- Requires `docker` and `node`; fails fast if either is unavailable.
-- Accepts `.pdf`, `.docx`, `.pptx`, and `.xlsx` by default; pass `--force` only
-  when intentionally letting Docling try another extension.
-- Requires exactly one of:
-  - `--out-dir <dir>`: writes to `<dir>/<input-stem>/`.
-  - `--output <file.md>`: writes the primary Markdown file exactly there.
-- Fails rather than overwriting existing output unless `--overwrite` is passed.
-- Builds the local Docker image from this skill's `Dockerfile` when missing;
-  first build can be slow because it installs Docling, native OpenCV runtime
-  libraries, and PDF layout, table, and RapidOCR models for offline conversion.
-- Saves the default image to `.cache/docker-images/` inside this skill after
-  build and reloads it if `docker system prune -a` removes the Docker image.
-- Runs Docker with input parent mounted read-only and output mounted read-write.
-- Runs with `--network none` by default; set `DOCLING_DOCKER_NETWORK=default`
-  only when a Docling option truly needs network access.
-- Runs as the current UID/GID by default on macOS/Linux; set
-  `DOCLING_DOCKER_USER=default` to use the container default user.
+- `--json` adds a Docling JSON sidecar.
+- `--format text|html` changes the primary format (default `md`); `--output` must use the matching extension.
+- `--overwrite` replaces existing output; without it the helper fails on any collision.
+- `--force` lets Docling try an extension other than `.pdf`, `.docx`, `.pptx`, or `.xlsx`.
+- Arguments after `--` go straight to `docling convert`, for example `-- --ocr --force-ocr` for scanned PDFs or `-- --no-ocr` for text PDFs where OCR degrades the output.
 
-## Output Shape
+On success the helper prints a JSON summary with the primary output path. It converts one file per run; loop in the shell for batches.
 
-For `--out-dir ./converted` and `--input ./paper.pdf`:
+## Runtime behavior
 
-```text
-converted/
-  paper/
-    paper.md
-    paper.json        # when --json is passed and Docling emits JSON
-    *_artifacts/      # when Docling emits referenced assets
-```
+- The first run builds the image from this skill's `Dockerfile` (slow: it installs Docling and downloads the layout, table, and RapidOCR models), then saves it to `.cache/docker-images/` in this skill. Later runs reload that archive if a prune removed the image.
+- Containers run with `--network none`; OCR works offline from the bundled models. Set `DOCLING_DOCKER_NETWORK=default` only when a passed-through Docling option needs the network.
+- Containers run as the current UID:GID so output is not root-owned; `DOCLING_DOCKER_USER=default` uses the container's default user.
+- `node <skill-dir>/scripts/docling-convert.mjs --help` lists every option and environment override, including the image, build, and archive modes.
 
-For `--output ./converted/paper.md`, sidecars are written next to the exact
-output path when requested/emitted.
+## Failures
 
-## Environment Overrides
-
-| Variable | Default | Purpose |
-| --- | ---: | --- |
-| `DOCLING_DOCKER_IMAGE` | `agent-docling-convert:2026-07-06` | Override the Docker image. |
-| `DOCLING_DOCKER_BUILD` | `missing` | `never`, `missing`, or `always` for building the default image. |
-| `DOCLING_DOCKER_ARCHIVE` | `missing` | `never`, `missing`, or `always` for saving the default image archive. |
-| `DOCLING_DOCKER_NETWORK` | `none` | Docker network mode. |
-| `DOCLING_DOCKER_USER` | current UID:GID | Use `default` to skip `--user`. |
-
-## Failure Handling
-
-- If Docker is unavailable or not running, tell the user Docker is required
-  because the workflow intentionally avoids local Python.
-- If conversion fails, retry only after addressing the specific Docling or Docker
-  error; do not silently fall back to Python, `markit`, or another converter.
-- If output exists, rerun with `--overwrite` only when replacing it is intended.
-- OCR is available offline in the default image. For scanned PDFs, pass Docling
-  flags after `--`, such as `-- --ocr --force-ocr`.
-- For text PDFs where OCR is unnecessary or produces worse output, retry with
-  `-- --no-ocr`.
-- If Docling reports missing native libraries such as `libxcb.so.1` or
-  `libGL.so.1`, force a default image rebuild with `DOCLING_DOCKER_BUILD=always`
-  and confirm the rebuilt image tag matches the default image in this skill.
-
-## Batch Pattern
-
-The helper handles one input at a time. For multiple files, loop explicitly:
-
-```sh
-for file in ./docs/*.{pdf,docx,pptx,xlsx}; do
-  [ -e "$file" ] || continue
-  node scripts/docling-convert.mjs --input "$file" --out-dir ./converted
-done
-```
+- Docker missing or its daemon down: tell the user Docker is required for this workflow.
+- Missing native libraries such as `libxcb.so.1` or `libGL.so.1`: rebuild with `DOCLING_DOCKER_BUILD=always`.
+- Poor text from a scan: rerun with `-- --ocr --force-ocr`. Garbled text from a digital PDF: rerun with `-- --no-ocr`.

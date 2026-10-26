@@ -12,8 +12,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision \
-    && python -m pip install docling
+    && python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.12.1 torchvision==0.27.1 \
+    && python -m pip install docling==2.110.0
 
 RUN docling-tools models download layout tableformer rapidocr --output-dir /opt/docling/models \
     && chmod -R a+rX /opt/docling/models

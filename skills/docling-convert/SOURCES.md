@@ -12,63 +12,39 @@
 ## Decisions
 
 - Primary output is Markdown; JSON is optional via `--json`.
-- The skill is script-backed because path handling, overwrite safety, Docker
-  mounts, image build behavior, and output normalization are brittle as prose.
+- The skill is script-backed because path handling, overwrite safety, Docker mounts, image build behavior, and output normalization are brittle as prose.
 - No local Python fallback is allowed.
-- The default container image is built locally from the bundled `Dockerfile`
-  instead of relying on unofficial Docker Hub images.
-- The helper supports one file at a time; batch conversion is documented as an
-  explicit shell loop.
+- The default container image is built locally from the bundled `Dockerfile` instead of relying on unofficial Docker Hub images.
+- The helper supports one file at a time; batch conversion is documented as an explicit shell loop.
 - Docker network is disabled by default.
 - The default image includes native OpenCV runtime libraries and RapidOCR models so Docling's default OCR path works offline.
-- The default Docker image is saved outside Docker under the skill-local
-  `.cache/docker-images/` directory so it can be restored after
-  `docker system prune -a` removes unused images, and removing the skill also
-  removes its cache.
-- Docker runs as current UID/GID by default on macOS/Linux to avoid root-owned
-  outputs.
-- The skill replaces general PDF extraction/conversion behavior; keep
-  `convert-pdf-to-image` for raster rendering.
+- The default Docker image is saved outside Docker under the skill-local `.cache/docker-images/` directory so it can be restored after `docker system prune -a` removes unused images, and removing the skill also removes its cache.
+- Docker runs as current UID/GID by default on macOS/Linux to avoid root-owned outputs.
+- The skill replaces general PDF extraction/conversion behavior; keep `convert-pdf-to-image` for raster rendering.
 
 ## Gaps
 
-- The Dockerfile currently installs the latest Docling at image build time. Pin a
-  version after observing real-world stability or if reproducibility requires it.
-- Office-file sample conversions were not validated unless sample files are added
-  to a local test fixture.
+- Office-file sample conversions were not validated unless sample files are added to a local test fixture.
 
 ## Validation Log
 
 - Docker daemon was verified available after the user started Docker.
-- Pulling `ghcr.io/docling-project/docling:latest` returned registry denied, so a
-  bundled Dockerfile strategy was selected.
-- The Dockerfile was adjusted to preinstall CPU PyTorch wheels before Docling to
-  avoid pulling CUDA packages into the local image.
-- 2026-07-06: PDF conversion failed in the prior image because `cv2` could not
-  load `libxcb.so.1`, then `libGL.so.1`; the Dockerfile now installs `libxcb1`,
-  `libgl1`, and `libglib2.0-0`.
-- 2026-07-06: PDF conversion then failed because default OCR expected missing
-  RapidOCR model files under `/opt/docling/models/RapidOcr`; the Dockerfile now
-  downloads Docling `layout`, `tableformer`, and `rapidocr` models into
-  `/opt/docling/models`.
-- The helper passes `--artifacts-path` so PDF conversion works with Docker network
-  disabled.
+- Pulling `ghcr.io/docling-project/docling:latest` returned registry denied, so a bundled Dockerfile strategy was selected.
+- The Dockerfile was adjusted to preinstall CPU PyTorch wheels before Docling to avoid pulling CUDA packages into the local image.
+- 2026-07-06: PDF conversion failed in the prior image because `cv2` could not load `libxcb.so.1`, then `libGL.so.1`; the Dockerfile now installs `libxcb1`, `libgl1`, and `libglib2.0-0`.
+- 2026-07-06: PDF conversion then failed because default OCR expected missing RapidOCR model files under `/opt/docling/models/RapidOcr`; the Dockerfile now downloads Docling `layout`, `tableformer`, and `rapidocr` models into `/opt/docling/models`.
+- The helper passes `--artifacts-path` so PDF conversion works with Docker network disabled.
 - `node --check scripts/docling-convert.mjs` passed.
 - `node scripts/docling-convert.mjs --help` passed.
 - Docker image `agent-docling-convert:2026-07-02` built successfully.
-- Docker image `agent-docling-convert:2026-07-06` built successfully with native
-  OpenCV runtime libraries and RapidOCR model artifacts.
-- Verified the default image contains RapidOCR detection, classification, and
-  recognition model files under `/opt/docling/models/RapidOcr`.
+- Docker image `agent-docling-convert:2026-07-06` built successfully with native OpenCV runtime libraries and RapidOCR model artifacts.
+- Verified the default image contains RapidOCR detection, classification, and recognition model files under `/opt/docling/models/RapidOcr`.
 - Sample DOCX conversion to Markdown succeeded with Docker network disabled.
 - Sample PDF conversion to Markdown succeeded with Docker network disabled.
-- 2026-07-06: two Dell PDF conversions succeeded with default OCR enabled and
-  Docker network disabled.
-- 2026-07-06: a Dell PDF conversion succeeded with `-- --ocr --force-ocr`,
-  confirming OCR can run offline from bundled RapidOCR artifacts.
-- 2026-07-06: a local image/scanned PDF conversion succeeded with
-  `-- --ocr --force-ocr`, confirming OCR extraction works on an image-based
-  input without Docker network access.
+- 2026-07-06: two Dell PDF conversions succeeded with default OCR enabled and Docker network disabled.
+- 2026-07-06: a Dell PDF conversion succeeded with `-- --ocr --force-ocr`, confirming OCR can run offline from bundled RapidOCR artifacts.
+- 2026-07-06: a local image/scanned PDF conversion succeeded with `-- --ocr --force-ocr`, confirming OCR extraction works on an image-based input without Docker network access.
 - Exact `--output` mode with `--json` sidecar succeeded.
 - Helper archive save/load behavior was added to survive Docker image pruning.
+- 2026-10-26: pinned the Dockerfile to `docling==2.110.0`, `torch==2.12.1`, and `torchvision==0.27.1`, the versions read from the existing `agent-docling-convert:2026-07-06` image, so rebuilds reproduce it (PyPI latest was 2.142.1; not rebuilt or revalidated against newer Docling).
 - Existing-output and unsupported-extension failure paths were verified.
