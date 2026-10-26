@@ -1,27 +1,32 @@
 ---
 name: typescript-project-setup
-description: "TypeScript project configuration: tsconfig setup, compiler options, project references, and import conventions. Use when creating or editing tsconfig files, configuring project references, setting compiler options, troubleshooting module resolution, or fixing import path issues. Not for type-level programming (generics, utility types) — see typescript-magician."
+description: "TypeScript project configuration: tsconfig setup, compiler options, project references, build models (compile to dist or Node.js type stripping with declaration-only builds), and import conventions. Use when creating or editing tsconfig files, configuring project references, setting compiler options, setting up a TypeScript build, or fixing module resolution and import specifiers. Not for type-level programming (generics, utility types) — see typescript-magician."
 ---
 
 # TypeScript Project Setup
 
 ## Installation
 
-Install TypeScript 6:
+Everything in this skill applies to both TypeScript 6 and TypeScript 7 (the native `tsc`, published as the same `typescript` package). New projects install TypeScript 7:
 
 ```bash
-pnpm add -D typescript@^6.0.0
+pnpm add -D typescript@^7.0.0
 ```
 
-## Build Pipeline
+Stay on `typescript@^6.0.0` when the project already pins TypeScript 6, or when a tool in the project does not yet support TypeScript 7.
 
-- Compile TypeScript with `tsc` (project build). No `tsx`, `bun`, `ts-node`, `jiti`, or similar runtime transpilers.
-- Run compiled output with `node` (target `dist/`).
-- For dev loop: `tsc --watch` + `node --watch dist/index.js` (or a file watcher on JS output).
-- Use `outDir` in TypeScript config and wire `package.json` scripts to `tsc` then `node`.
-- Entry points reference JS output only (no `.ts` in runtime).
+## Build model
 
-## Base Config
+Two build models, equally valid. Each has a reference file holding its emit options, package.json wiring, and import specifier rule; read the one in use before configuring a package.
+
+- **Compile-to-`dist/`** ([`COMPILE-TO-DIST.md`](COMPILE-TO-DIST.md)): `tsc` emits JS and declarations into `dist/`, and Node.js runs the JS. Import specifiers end in `.js`.
+- **Type stripping** ([`TYPE-STRIPPING.md`](TYPE-STRIPPING.md)): Node.js runs `.ts` source directly, and `tsc` emits only declarations into `dist/types/`. Import specifiers end in `.ts`/`.tsx`. Node.js refuses to strip types under `node_modules`, so this model only fits packages that are never installed from npm (workspace packages and apps).
+
+In an existing project, follow the model it already uses: `node … .ts` scripts, `allowImportingTsExtensions`, or the `typescript-execution-via-type-stripping` preset signal type stripping; `exports`/`imports` targets in `dist/` signal compile-to-`dist/`. For a new project, ask the user which model to use.
+
+Both models build with `tsc --build ./tsconfig.json`. The root `tsconfig.json` is a solution config (`"files": []`), so plain `tsc` without `--build` compiles nothing.
+
+## Base config
 
 `tsconfig.json`:
 
@@ -36,11 +41,11 @@ pnpm add -D typescript@^6.0.0
 }
 ```
 
-`tsconfig.build.json`:
+`tsconfig.build.json` starts from these shared options; the model's reference file adds its emit options:
 
 ```json
 {
-  /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults?version-tab=TS+6.0+Node.js */
+  /* based on https://patricktree.me/tidbits/sensible-tsconfig-defaults ("TS 6.0/7.0 Node.js" tab) */
 
   "compilerOptions": {
     /* Type Checking */
@@ -57,21 +62,12 @@ pnpm add -D typescript@^6.0.0
     "rootDir": "./src",
     "types": ["node"],
 
-    /* Emit */
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist",
-    "sourceMap": true,
-
     /* Interop Constraints */
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
 
     /* Language and Environment */
-    "target": "ES2020",
-
-    /* Projects */
-    "incremental": true,
+    "target": "ES2022",
 
     /* Completeness */
     "skipLibCheck": true
@@ -81,14 +77,16 @@ pnpm add -D typescript@^6.0.0
 }
 ```
 
-### TS 6.0 notes
+### Defaults since TS 6.0
 
-- `types` defaults to `[]` in TS 6.0 (no implicit `@types` inclusion). For Node.js projects, add `"node"` to `compilerOptions.types`.
-- `rootDir` defaults to the tsconfig directory in TS 6.0. Explicitly set `"rootDir": "./src"` in project configs so output structure in `dist/` mirrors the source layout.
+- `types` defaults to `[]` since TS 6.0 (no implicit `@types` inclusion), so Node.js projects list `"node"` in `compilerOptions.types`.
+- `rootDir` defaults to the tsconfig directory since TS 6.0, so project configs set `"rootDir": "./src"` to keep the output mirroring the source layout.
 
-## Additional tsconfig files (e.g. E2E tests)
+## Additional tsconfig files (e.g. tests)
 
-When a project has files outside `src/` that import from `src/` (e.g. E2E tests in `tests/`, a `playwright.config.ts`), create a separate tsconfig that **references** `tsconfig.build.json` instead of duplicating `src` in its `include`. This way TypeScript resolves imports into `src/` through the project reference rather than re-including the source files.
+When a project has files outside `src/` that import from `src/` (e.g. tests in `test/`, E2E tests, a `playwright.config.ts`), create a separate tsconfig that **references** `tsconfig.build.json` instead of duplicating `src` in its `include`. This way TypeScript resolves imports into `src/` through the project reference rather than re-including the source files.
+
+A referenced project must be composite, so `tsconfig.build.json` sets `"composite": true` (which implies `incremental` and `declaration`); otherwise `tsc --build` fails with TS6306.
 
 Example `tsconfig.e2e.json`:
 
@@ -97,7 +95,6 @@ Example `tsconfig.e2e.json`:
   "compilerOptions": {
     // same base options as tsconfig.build.json, but:
     "noEmit": true,
-    "composite": true,
   },
   "include": ["tests", "playwright.config.ts"],
   "exclude": ["**/node_modules"],
@@ -119,15 +116,5 @@ Add it to the root `tsconfig.json` references:
 
 ## Key rules
 
-- **Explicit file extensions required.** Import specifiers must include `.ts`/`.tsx` (or `.js`/`.jsx`) so TypeScript resolves them through the imports map without `tsconfig paths`.
-
-  ```ts
-  // ✅ correct
-  import { cn } from "#pkg/lib/utils.ts";
-  import { Button } from "#pkg/components/ui/button.tsx";
-
-  // ❌ wrong — TypeScript can't resolve extensionless paths through #imports
-  import { cn } from "#pkg/lib/utils";
-  ```
-
-- **No `tsconfig paths` needed.** TypeScript (`moduleResolution: "bundler"` or `"node16"`) resolves `#imports` from `package.json` natively when extensions are present.
+- **Explicit file extensions.** Every relative and `#imports` specifier names a file extension; which one depends on the build model.
+- **`package.json#imports` instead of `tsconfig paths`.** TypeScript (`moduleResolution: "node16"` or `"bundler"`) resolves `#imports` natively, and Node.js honors them at runtime without extra tooling.
