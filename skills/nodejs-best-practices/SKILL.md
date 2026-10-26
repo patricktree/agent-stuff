@@ -7,4 +7,6 @@ description: "Node.js runtime and code-level best practices. Use when writing or
 
 ## Entrypoints
 
-For ESM scripts and CLIs on supported Node.js versions, top-level `await` is acceptable. Prefer it over wrapping the whole file in an async `main()` only to enable `await`, unless a named entrypoint improves readability, testability, or error boundaries.
+In ESM entrypoints (scripts, CLIs), use top-level `await` directly instead of wrapping the whole file in an async `main()` only to enable `await`. Keep a named entrypoint function when it improves readability, testability, or error boundaries.
+
+Keep top-level `await` in entrypoints, out of modules that other code imports: `require()` of an ES module (unflagged since Node.js 20.19 and 22.12) throws `ERR_REQUIRE_ASYNC_MODULE` when the imported module graph contains top-level `await`.
