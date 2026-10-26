@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+cd "$(dirname "$0")"
+
 if [ "${CI}" = "true" ]; then
     # in CI/CD (i.e. GitHub Actions runners and Docker builds), we are finished
     exit 0

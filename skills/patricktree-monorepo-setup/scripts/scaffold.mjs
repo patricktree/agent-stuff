@@ -21,6 +21,7 @@ const MANAGED_FILES = [
   { asset: "oxfmt.config.ts.tpl", target: "oxfmt.config.ts", isTemplate: true },
   { asset: "oxlint.config.ts", target: "oxlint.config.ts" },
   { asset: "knip.ts", target: "knip.ts" },
+  { asset: "markdownlint-cli2.mjs", target: ".markdownlint-cli2.mjs" },
   { asset: "pre-commit", target: ".husky/pre-commit" },
   { asset: "settings.json", target: ".vscode/settings.json" },
 ];
@@ -28,26 +29,18 @@ const MANAGED_FILES = [
 const SCRIPT_DIRECTORY = path.dirname(url.fileURLToPath(import.meta.url));
 const ASSETS_DIRECTORY = path.resolve(SCRIPT_DIRECTORY, "../assets");
 
-export function deriveNodeMajor(nodeVersion) {
-  const match = /^(?:\^|~)?v?(\d+)(?:\.\d+){0,2}(?:-[0-9A-Za-z.-]+)?$/.exec(nodeVersion);
-  if (match === null) {
+export function validateNodeVersion(nodeVersion) {
+  if (!/^[0-9A-Za-z.^~<>=| -]+$/.test(nodeVersion) || nodeVersion.trim() === "") {
     throw new Error(
-      `Unsupported Node.js version '${nodeVersion}'. Use one exact major line, for example '^24.18.0'.`,
+      `Unsupported Node.js version '${nodeVersion}'. Use a semver range, for example '^24.21.0'.`,
     );
   }
-
-  const nodeMajor = Number.parseInt(match[1], 10);
-  if (!Number.isSafeInteger(nodeMajor) || nodeMajor < 1) {
-    throw new Error(`Invalid Node.js major in '${nodeVersion}'.`);
-  }
-
-  return nodeMajor;
 }
 
 export function validatePnpmVersion(pnpmVersion) {
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(pnpmVersion)) {
     throw new Error(
-      `Unsupported pnpm version '${pnpmVersion}'. Use an exact semantic version, for example '11.1.0'.`,
+      `Unsupported pnpm version '${pnpmVersion}'. Use an exact semantic version, for example '12.11.2'.`,
     );
   }
 }
@@ -114,11 +107,11 @@ function parseArguments(arguments_) {
 function printHelp() {
   process.stdout.write(`Usage:
   node scripts/scaffold.mjs --mode <plan|apply> --target <path> \\
-    --node-version <single-major-version> --pnpm-version <exact-version> [--scope <scope>]
+    --node-version <semver-range> --pnpm-version <exact-version> [--scope <scope>]
 
 Examples:
   node scripts/scaffold.mjs --mode plan --target . \\
-    --node-version '^24.18.0' --pnpm-version '11.1.0' --scope 'pv-analysis'
+    --node-version '^24.21.0' --pnpm-version '12.11.2' --scope 'pv-analysis'
 `);
 }
 
@@ -354,13 +347,12 @@ async function inspectSubmodule(targetDirectory) {
 export async function buildSetupPlan({ nodeVersion, pnpmVersion, scope, target }) {
   const targetDirectory = path.resolve(target);
   await assertTargetIsGitRoot(targetDirectory);
-  const nodeMajor = deriveNodeMajor(nodeVersion);
+  validateNodeVersion(nodeVersion);
   validatePnpmVersion(pnpmVersion);
   const resolvedScope = scope ?? inferScope(targetDirectory);
   validateScope(resolvedScope);
 
   const replacements = {
-    nodeMajor: String(nodeMajor),
     nodeVersion,
     pnpmVersion,
     scope: resolvedScope,
@@ -382,12 +374,10 @@ export async function buildSetupPlan({ nodeVersion, pnpmVersion, scope, target }
   return {
     actions,
     configuration: {
-      nodeMajor,
       nodeVersion,
       pnpmVersion,
       scope: resolvedScope,
       target: targetDirectory,
-      typesNodeVersion: `^${nodeMajor}`,
     },
     conflicts,
     gitignoreInspection,

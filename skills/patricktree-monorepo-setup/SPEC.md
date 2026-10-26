@@ -2,17 +2,15 @@
 
 ## Intent
 
-Provide a safe, deterministic way to reproduce Patrick Kerschbaum's standard
-pnpm TypeScript monorepo foundation across Git repositories.
+Provide a safe, deterministic way to reproduce Patrick Kerschbaum's standard pnpm TypeScript monorepo foundation across Git repositories.
 
 ## Scope
 
 In scope:
 
 - Interactive collection of Node.js, pnpm, and package-scope inputs.
-- Automatic `@types/node` major alignment.
 - `.patricktree-stack` registration and initialization.
-- Root pnpm, Turborepo, TypeScript-tooling, oxfmt, oxlint, Knip, Husky, and VS Code configuration.
+- Root pnpm, Turborepo, TypeScript-tooling, oxfmt, oxlint, Knip, markdownlint, Mermaid and submodule checks, Husky, and VS Code configuration.
 - Plan-before-apply safety and full post-install validation.
 
 Out of scope:
@@ -31,19 +29,16 @@ Out of scope:
 
 ## Runtime Contract
 
-- Required first actions: inspect Git state; obtain and confirm Node.js version,
-  exact pnpm version, and package scope; run plan mode.
+- Required first actions: inspect Git state; obtain and confirm Node.js version, exact pnpm version, and package scope; run plan mode.
 - Required outputs: structured plan/apply results and a validation summary.
-- Non-negotiable constraints: derive `@types/node` from the Node major; never
-  force overwrites; never commit; preserve unrelated changes.
-- Expected bundled files loaded at runtime: `SKILL.md`; `references/examples.md`
-  only for examples or troubleshooting; assets are consumed by the script.
+- Non-negotiable constraints: never force overwrites; never commit; preserve unrelated changes.
+- Expected bundled files loaded at runtime: `SKILL.md`; `references/examples.md` only for examples or troubleshooting; assets are consumed by the script.
 
 ## Source And Evidence Model
 
 Authoritative sources:
 
-- Current `content-relay`, `oeko-app`, and `pv-analysis` root setup files.
+- Current `cup`, `content-relay`, `oeko-app`, and `pv-analysis` root setup files.
 - Current `.patricktree-stack` package manifests and shared configuration.
 - Agent Skills and local `agent-stuff` conventions.
 
@@ -69,23 +64,16 @@ Data that must not be stored:
 
 ## Validation
 
-- Lightweight validation: Node syntax check, script tests, help output, skill
-  structure validation, Markdown linting.
-- Deeper validation: plan against a known-good repository; apply in a temporary
-  Git repository when network access is available; install, fix, validate, and
-  formatting checks in a generated repository.
-- Holdout examples: composite Node range, existing conflicting `package.json`,
-  existing unrelated `.gitmodules`, and partially initialized submodule.
-- Acceptance gates: plan is non-mutating; conflicts stop before mutation; pnpm
-  and Node versions render exactly; `@types/node` matches the Node major.
+- Lightweight validation: Node syntax check, script tests, help output, skill structure validation, Markdown linting.
+- Deeper validation: plan against a known-good repository; apply in a temporary Git repository when network access is available; install, fix, validate, and formatting checks in a generated repository.
+- Holdout examples: existing conflicting `package.json`, existing unrelated `.gitmodules`, and partially initialized submodule.
+- Acceptance gates: plan is non-mutating; conflicts stop before mutation; pnpm and Node versions render exactly.
 
 ## Known Limitations
 
 - Applying a new submodule requires Git network access.
-- Tool versions other than Node.js, pnpm, and `@types/node` remain pinned in the
-  bundled templates and require periodic maintenance.
-- Existing semantically equivalent setup files with different formatting are
-  treated as conflicts.
+- Tool versions other than Node.js and pnpm remain pinned in the bundled templates and require periodic maintenance.
+- Existing semantically equivalent setup files with different formatting are treated as conflicts.
 
 ## Maintenance Notes
 

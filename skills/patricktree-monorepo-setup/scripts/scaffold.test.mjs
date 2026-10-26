@@ -7,18 +7,15 @@ import path from "node:path";
 import test from "node:test";
 import url from "node:url";
 
-import { buildSetupPlan, deriveNodeMajor, inferScope, validatePnpmVersion } from "./scaffold.mjs";
+import { buildSetupPlan, inferScope, validateNodeVersion, validatePnpmVersion } from "./scaffold.mjs";
 
 const SCRIPT_PATH = path.join(path.dirname(url.fileURLToPath(import.meta.url)), "scaffold.mjs");
 
-test("derives the @types/node major from one Node.js major line", () => {
-  assert.equal(deriveNodeMajor("^24.18.0"), 24);
-  assert.equal(deriveNodeMajor("22.14.0"), 22);
-  assert.equal(deriveNodeMajor("v20"), 20);
-});
-
-test("rejects a composite Node.js range", () => {
-  assert.throws(() => deriveNodeMajor(">=22 <25"), /Unsupported Node\.js version/);
+test("accepts Node.js semver ranges", () => {
+  assert.doesNotThrow(() => validateNodeVersion("^24.21.0"));
+  assert.doesNotThrow(() => validateNodeVersion(">=22 <25"));
+  assert.throws(() => validateNodeVersion(""), /Unsupported Node\.js version/);
+  assert.throws(() => validateNodeVersion('24"'), /Unsupported Node\.js version/);
 });
 
 test("requires an exact pnpm version", () => {
@@ -42,15 +39,14 @@ test("plans aligned setup files without mutating the repository", async () => {
     });
 
     assert.equal(plan.valid, true);
-    assert.equal(plan.configuration.typesNodeVersion, "^24");
     assert.equal(fs.existsSync(path.join(targetDirectory, "package.json")), false);
     assert.match(
       plan.renderedFiles.find((file) => file.target === "package.json").content,
-      /"packageManager": "pnpm@11\.1\.0"/,
+      /"engines": \{\n    "pnpm": "11\.1\.0"\n  \},\n  "packageManager": "pnpm@11\.1\.0"/,
     );
-    assert.match(
+    assert.doesNotMatch(
       plan.renderedFiles.find((file) => file.target === "pnpm-workspace.yaml").content,
-      /"@types\/node": \^24/,
+      /\{\{/,
     );
   } finally {
     await fsPromises.rm(targetDirectory, { force: true, recursive: true });

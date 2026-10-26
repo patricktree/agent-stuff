@@ -5,6 +5,12 @@ packages:
   - tooling/*
   # Opt in to additional .patricktree-stack projects only when the consuming repo uses them.
   - .patricktree-stack/tooling/config-oxfmt
+  - .patricktree-stack/tooling/config-oxlint
+  - .patricktree-stack/tooling/config-turbo-typescript
+  - .patricktree-stack/tooling/config-typescript
+  - .patricktree-stack/tooling/config-vitest
+  - .patricktree-stack/tooling/mermaid-check
+  - .patricktree-stack/tooling/submodule-check
 
 allowBuilds:
   better-sqlite3: true
@@ -14,12 +20,17 @@ allowBuilds:
   unrs-resolver: true
 
 catalog:
-  oxfmt: ^0.58.0
-  oxlint: ^1.72.0
-  oxlint-tsgolint: ^7.0.2001
+  "@typescript/native": "npm:typescript@^7.0.2"
+  "@types/node": ^26.6.5
+  oxfmt: ^0.74.0
+  oxlint: ^1.89.0
+  oxlint-tsgolint: ^7.0.2005
+  typescript: "npm:@typescript/typescript6@^6.0.2"
+  vite: ^8.3.5
+  vitest: ^4.1.11
 
 packageExtensions:
-  eslint-plugin-react-you-might-not-need-an-effect@1.0.1:
+  eslint-plugin-react-you-might-not-need-an-effect@1.0.2:
     # "eslint-plugin-react-you-might-not-need-an-effect" defines eslint as peer dependency, but that is not required when used by oxlint --> make it optional
     peerDependenciesMeta:
       eslint:
