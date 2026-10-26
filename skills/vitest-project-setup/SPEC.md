@@ -2,38 +2,38 @@
 
 ## Intent
 
-Maintain focused Vitest setup conventions for Node.js, TypeScript, and Vite projects split from the removed broad Node.js project setup skill.
+Maintain focused Vitest setup conventions for Node.js, TypeScript, Vite, and Patricktree monorepo projects.
 
 ## Scope
 
 In scope:
 
-- Preserve the exact recommendations moved from the original skill.
-- Keep trigger wording precise for Vitest dependencies, test scripts, Vite test config, test include patterns, isolation settings, or vitest.d.ts tsconfig coverage.
+- Keep recommendations current with the latest Vitest major and with `.patricktree-stack/tooling/config-vitest`.
+- Keep trigger wording precise for Vitest dependencies, test scripts, Vite test config, shared config-vitest consumption, test or coverage include patterns, isolation settings, coverage thresholds, or tsconfig coverage of the Vitest config file.
 
 Out of scope:
 
 - ESLint, Prettier, pnpm, or general package metadata setup.
-- Semantic cleanup of recommendations unless requested separately.
 
 ## Users And Trigger Context
 
 - Primary users: coding agents configuring or reviewing JavaScript/TypeScript projects.
-- Common user requests: add, edit, standardize, or review Vitest dependencies, test scripts, Vite test config, test include patterns, isolation settings, or vitest.d.ts tsconfig coverage.
+- Common user requests: add, edit, standardize, or review Vitest dependencies, test scripts, Vite or shared Vitest config, test or coverage include patterns, isolation settings, or coverage thresholds.
 - Should not trigger for: unrelated project setup areas covered by sibling skills.
 
 ## Runtime Contract
 
 - Required first actions: read `SKILL.md` and apply only the relevant guidance.
 - Required outputs: code or configuration changes that preserve the skill's recommendations.
-- Non-negotiable constraints: do not silently modernize or clean up preserved recommendations.
+- Non-negotiable constraints: keep `vitest` and `@vitest/coverage-v8` on the same exact version; keep shared defaults in config-vitest rather than in consuming configs.
 - Expected bundled files loaded at runtime: none.
 
 ## Source And Evidence Model
 
 Authoritative sources:
 
-- The removed broad Node.js project setup skill content as of the split.
+- Vitest documentation and migration guide for the current major.
+- `.patricktree-stack/tooling/config-vitest/vitest-base.js` for the shared monorepo defaults.
 
 Useful improvement sources:
 
@@ -62,14 +62,13 @@ Data that must not be stored:
 - Lightweight validation: run skill structural validation on the skill directory.
 - Deeper validation: run markdownlint on changed Markdown files.
 - Holdout examples: requests for sibling tooling should not load this skill.
-- Acceptance gates: no runtime or prompt references to the removed broad skill remain.
+- Acceptance gates: the pinned Vitest version and documentation links resolve to the current major.
 
 ## Known Limitations
 
-- The split intentionally preserves existing recommendations, including any stale versions or duplicated ESLint rules.
+- The pinned version in `SKILL.md` goes stale with each Vitest release; prefer workspace catalog entries where they exist.
 
 ## Maintenance Notes
 
 - When to update `SKILL.md`: recommendation changes or trigger precision fixes.
-- When to update `SOURCES.md`: when adding provenance or changelog detail.
 - When to update `references/evidence/`: when preserving trigger examples or regression cases.
