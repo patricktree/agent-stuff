@@ -1,56 +1,30 @@
 ---
 name: otel-node-sdk-bootstrap
-description: Set up OpenTelemetry Node SDK initialization correctly in Node.js TypeScript ESM apps. Use when the user asks to initialize OTEL early, fix OTEL SDK startup order, bootstrap OpenTelemetry in an ESM entrypoint, split a server or CLI entrypoint into `instrumentation.ts` + bootstrap file + implementation file, or ensure the SDK is registered before the rest of the module graph loads.
+description: Bootstrap the OpenTelemetry Node SDK in Node.js TypeScript ESM apps so the SDK and its ESM loader hook are registered before the app module graph loads. Use when initializing OTEL in an ESM entrypoint, fixing OTEL startup order or ESM imports that are not instrumented, or splitting an entrypoint into `instrumentation.ts`, a bootstrap file and a `*-main.ts` file.
 ---
 
 # OTEL Node SDK Bootstrap
 
-Use this skill for **greenfield** Node.js + TypeScript + **ESM** applications that need a correct OpenTelemetry bootstrap sequence.
+This skill covers one opinionated bootstrap for **greenfield** Node.js + TypeScript + **ESM** apps that start the OpenTelemetry Node SDK in application code, from an entrypoint such as `bin.ts`, `server.ts`, or `cli.ts`. CJS apps and apps preloaded via `node --import` / `NODE_OPTIONS` need a different setup; tell the user this skill does not fit them.
 
-This skill is intentionally narrow and opinionated.
+## Why the split exists
 
-## When to use this pattern
+Instrumentation patches a module only if it is loaded after the SDK started. ESM makes this strict in two ways:
 
-Use this pattern when all of the following are true:
+- Node resolves and links every **static** import of a graph before any module body runs, so statements at the top of `instrumentation.ts` cannot run before sibling static imports in the same graph are loaded.
+- Packages the app loads via `import` bypass `require`, so OTEL patches them only through its ESM loader hook (`import-in-the-middle`), and a loader hook sees only modules imported after it is registered. Without the hook, some instrumentation still works by accident (modules that packages `require` internally, such as `http` or `pg`), while packages like `express` stay silently unpatched.
 
-- the app runs as **ESM**
-- the app initializes the **OpenTelemetry Node SDK** in application code
-- the SDK must be registered **before** the rest of the app module graph loads
-- the app has a clear entrypoint such as `bin.ts`, `server.ts`, `worker.ts`, or `cli.ts`
+So `instrumentation.ts` registers the hook and starts the SDK, and the bootstrap entrypoint then pulls in the app with a dynamic `import()`, so every app module loads after both are in place. Replacing it with a static import leaves the app uninstrumented without any error.
 
-If the app is CJS or is bootstrapped externally via `node --import ...` / `NODE_OPTIONS`, this skill does **not** apply directly.
+## File layout
 
-Read these bundled references before editing:
+Use these three modules unless the user has approved other names:
 
-- `references/api-surface.md`
-
-## Required file layout
-
-Use this exact seam unless the user has already approved a different naming convention:
-
-- `instrumentation.ts` — initializes OTEL at top level
-- bootstrap entrypoint such as `bin.ts` / `server.ts` / `worker.ts`
-- real main module such as `bin-main.ts` / `server-main.ts` / `worker-main.ts`
-
-### Responsibilities
-
-**`instrumentation.ts`**
-
-- initializes the Node SDK at top level
-- exports initialized observability objects only when needed
-- does not start the application
-
-**bootstrap entrypoint**
-
-- does a **static import** of `instrumentation.ts`
-- then does a **dynamic import** of the real main module via `await import(...)`
-- contains no real app startup logic besides the bootstrap split
-
-**`*-main.ts`**
-
-- contains the actual application startup logic
-- may import observability objects from `instrumentation.ts`
-- must not initialize the SDK itself
+| Module                                           | Owns                                                                                                                                                                   | Contains nothing of                                                                                                     |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `instrumentation.ts`                             | Registering the ESM loader hook, then building and starting `NodeSDK` at top level. Exports initialized handles (`sdk`, a logger facade) only when the app needs them. | App startup or imports of the app graph. Startup side effects hidden behind functions a caller must remember to invoke. |
+| Bootstrap entrypoint (`bin.ts`, `server.ts`, …)  | Module-loading order: one static import of `instrumentation.ts`, then `await import()` of the main module.                                                             | Startup logic or static imports of app modules.                                                                         |
+| Main module (`bin-main.ts`, `server-main.ts`, …) | Real startup: server or CLI wiring, signal handling, calling `sdk.shutdown()` on exit. May import handles from `instrumentation.ts`.                                   | A second SDK initialization.                                                                                            |
 
 ## Canonical pattern
 
@@ -63,13 +37,16 @@ await import("./bin-main.ts");
 
 ```ts
 // instrumentation.ts
+import { register } from "node:module";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+
+register("@opentelemetry/instrumentation/hook.mjs", import.meta.url);
 
 export const sdk = new NodeSDK({
   // exporters, resources, processors, instrumentations
 });
 
-await sdk.start();
+sdk.start();
 ```
 
 ```ts
@@ -79,43 +56,29 @@ import { startServer } from "./server.ts";
 await startServer();
 ```
 
-## Why this split exists
+`sdk.start()` is synchronous; `sdk.shutdown()` returns a promise.
 
-OpenTelemetry SDK setup must happen **before** application modules that should be observed are loaded.
-
-For ESM entrypoints, the safe pattern is:
-
-1. statically import `instrumentation.ts`
-2. let it register the SDK first
-3. then dynamically import the real main module
-
-The dynamic `import()` starts a fresh ESM evaluation phase after instrumentation setup, which prevents the main application graph from loading too early.
+`@opentelemetry/instrumentation/hook.mjs` is the only loader hook OTEL supports; it wraps `import-in-the-middle`, so do not register `import-in-the-middle/hook.mjs` directly. Node 26 runtime-deprecates `module.register()` (DEP0205) in favor of the synchronous `module.registerHooks()`, which OTEL does not support yet ([opentelemetry-js#4933](https://github.com/open-telemetry/opentelemetry-js/issues/4933)). On Node 26+, keep `register()`, mention the deprecation warning to the user, and check that issue for a supported synchronous hook before inventing one.
 
 ## Workflow
 
-1. Confirm the app is ESM and this skill applies.
+1. Confirm the app is ESM and starts the SDK in code.
 2. Identify the runtime entrypoint.
-3. Create `instrumentation.ts`.
-4. Move real startup logic into `*-main.ts`.
-5. Reduce the original entrypoint to:
-   - static import of `instrumentation.ts`
-   - dynamic import of `*-main.ts`
-6. Ensure no other module initializes the Node SDK.
-7. Validate startup, build, and tests.
+3. Create `instrumentation.ts` with the hook registration and SDK start, and add `@opentelemetry/instrumentation` as a direct dependency: the hook specifier resolves from `instrumentation.ts`, so a strict package manager such as pnpm fails with `ERR_MODULE_NOT_FOUND` when it is only transitive.
+4. Move the real startup logic into `*-main.ts`.
+5. Reduce the entrypoint to the static import of `instrumentation.ts` plus the dynamic import of `*-main.ts`.
+6. Search the repo for other `NodeSDK` constructions or `sdk.start()` calls; the process starts the SDK exactly once, in `instrumentation.ts`.
+7. Validate: build, tests, and one real startup that shows spans from an ESM-imported instrumented package (for example `express`), not only from manual spans.
 
-## Guardrails
+## Scope
 
-- Do **not** put the main startup logic in the bootstrap entrypoint.
-- Do **not** initialize the SDK lazily from a helper imported deep in the app.
-- Do **not** rely on import order inside a large entrypoint file once app modules are already statically imported there.
-- Do **not** create multiple SDK initializations in the same process.
-- Do **not** broaden this skill into generic OTEL architecture advice; keep it about the bootstrap sequence.
+Keep the work about the bootstrap sequence. Exporter choice, framework-specific instrumentation and general tracing, metrics or logging design belong to separate requests.
 
-## Output expectations
+## Report
 
-When applying this skill, produce:
+Tell the user:
 
-- the 3-file bootstrap split
-- a short explanation of why the dynamic import is required
-- any startup command caveats that still matter for this repo
+- the three-file split you made
+- why the dynamic import and the loader hook are both required
+- startup command caveats that still apply to this repo (for example a Node version that emits DEP0205)
 - validation results

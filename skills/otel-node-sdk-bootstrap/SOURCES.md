@@ -1,42 +1,19 @@
 # Sources
 
+Checked 2026-10-26.
+
 ## Primary sources
 
-1. OpenTelemetry JS ESM support
-   - https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md
-   - Key points used:
-     - SDK setup must run before application code
-     - ESM needs special startup care
-     - `--import` / loader-hook guidance exists, but is broader than this skill's narrow scope
-
-2. Local implementation example
-   - `packages/backend/src/bin.ts`
-   - `packages/backend/src/instrumentation.ts`
-   - `packages/backend/src/bin-main.ts`
-   - Key points used:
-     - concrete 3-file split
-     - top-level await bootstrap pattern
-     - observability object reuse after initialization
+1. [OpenTelemetry JS ESM support](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md)
+   - SDK setup must run before application code.
+   - ESM needs the loader hook `@opentelemetry/instrumentation/hook.mjs`; it is the only supported hook, and using `import-in-the-middle/hook.mjs` directly may stop working.
+2. [opentelemetry-js#4933](https://github.com/open-telemetry/opentelemetry-js/issues/4933): open issue to move the recommended ESM bootstrap to `module.register(...)` in code.
+3. [`import-in-the-middle` README](https://github.com/nodejs/import-in-the-middle/blob/main/README.md): a hook registered via `module.register()` only sees imports evaluated after registration; synchronous `module.registerHooks()` support needs Node 22.22.3, 24.11.1, 25.1.0 or 26.0.0+.
+4. [Node.js DEP0205](https://nodejs.org/api/deprecations.html#dep0205-moduleregister): `module.register()` is runtime-deprecated in Node 26 in favor of `module.registerHooks()`.
+5. [`NodeSDK` source](https://github.com/open-telemetry/opentelemetry-js/blob/main/experimental/packages/opentelemetry-sdk-node/src/sdk.ts): `start(): void`, `shutdown(): Promise<void>`.
 
 ## Decisions
 
-- Chosen scope: **greenfield only**
-- Chosen runtime shape: **Node.js + TypeScript + ESM only**
-- Chosen pattern: **`instrumentation.ts` + tiny bootstrap entrypoint + dynamic import of `*-main.ts`**
-- Excluded on purpose:
-  - CJS bootstraps
-  - generic OTEL architecture guidance
-  - zero-code auto-instrumentation
-  - loader-hook deep dives
-
-## Coverage matrix
-
-- API surface: covered in `references/api-surface.md`
-- naming / file seam convention: covered in `SKILL.md` and `references/api-surface.md`
-
-## Gaps intentionally left open
-
-- exact `NODE_OPTIONS` / `--import` / `--experimental-loader` startup commands for every environment
-- CJS equivalents
-- framework-specific tracing/instrumentation packages
-- runtime-specific exporter selection
+- Scope: greenfield Node.js + TypeScript + ESM apps that start the SDK in code.
+- Pattern: `instrumentation.ts` (hook registration + SDK start) + tiny bootstrap entrypoint + dynamic import of `*-main.ts`.
+- Excluded on purpose: CJS bootstraps, `--import` / `NODE_OPTIONS` preloading, zero-code auto-instrumentation, exporter and framework-specific setup.
