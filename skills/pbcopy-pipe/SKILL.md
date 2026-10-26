@@ -1,30 +1,21 @@
 ---
 name: pbcopy-pipe
-description: Use when the user asks to copy text to the macOS clipboard, pipe something into pbcopy, "pbcopy this", "copy to clipboard", or wants the previous/next response placed on the clipboard.
+description: Copy text to the macOS clipboard via `pbcopy`. Use when the user asks to copy or pbcopy text, or to put a previous or upcoming response on the clipboard.
 ---
 
 # Pbcopy Pipe
 
-Use `pbcopy` through a shell pipe when the user asks to copy generated text to the clipboard.
-
 ## Flow
 
-1. Decide the exact text to copy. If the user provides no text or target, copy the assistant's immediately preceding message.
-2. Pipe it to `pbcopy` with a quoted here-document:
+1. Decide the exact text to copy: the subset the user named, or else the assistant's immediately preceding message. For generated content, take the final version, not analysis notes or tool output.
+2. Pipe it verbatim into `pbcopy` through a quoted here-document, which preserves formatting and blocks shell interpolation:
 
-```sh
-cat <<'EOF' | pbcopy
-text to copy
-EOF
-```
+   ```sh
+   cat <<'EOF' | pbcopy
+   text to copy
+   EOF
+   ```
 
-3. If the user asks to copy a subset of a previous answer, copy only that subset.
-4. Reply briefly, e.g. `Copied to clipboard.`
+   Copy only the text itself; add Markdown fences, quotes, or commentary only when the user asked for them to be copied. If the text contains a line that is exactly `EOF`, use another delimiter such as `PB_COPY_EOF`.
 
-## Rules
-
-- Use `cat <<'EOF' | pbcopy` for multi-line text; it preserves formatting and avoids shell interpolation.
-- Do not add extra commentary, Markdown fences, or surrounding quotes unless the user asked for them to be copied.
-- If the text itself contains a line that is exactly `EOF`, choose a different delimiter such as `PB_COPY_EOF`.
-- For generated content, copy the final polished version, not analysis notes or tool output.
-- If `pbcopy` is unavailable, say so and provide the exact text in the response instead.
+3. Reply briefly, e.g. `Copied to clipboard.` If `pbcopy` is unavailable, say so and give the exact text in the response instead.
