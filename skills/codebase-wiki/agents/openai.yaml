@@ -1,0 +1,5 @@
+interface:
+  display_name: "Codebase wiki"
+  short_description: "Set up a docs wiki or land a finished wayfinder effort into it"
+policy:
+  allow_implicit_invocation: false
