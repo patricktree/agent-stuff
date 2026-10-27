@@ -15,8 +15,8 @@ These are Patrick's shared defaults for all coding-agent work.
 
 ## Session setup
 
-- If `.nvmrc` exists, run `source ~/.nvm/nvm.sh && nvm install` once per session.
-- Before the first `pnpm` command, run `corepack enable` once per session; use the `pnpm` skill for package-manager details.
+- If `.nvmrc` exists and `node --version` differs from it, run `source ~/.nvm/nvm.sh && nvm install`.
+- If `pnpm` is not on the `PATH`, run `corepack enable`; use the `pnpm` skill for package-manager details.
 
 ## Conditional references
 
