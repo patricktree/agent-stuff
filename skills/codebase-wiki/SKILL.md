@@ -16,7 +16,7 @@ The schema is the single source of the maintenance rules, landing included. This
 - `setup` or empty: set up the wiki in the current repository.
 - `land <effort>`: land one effort, named by its `.scratch/<effort>/` folder or its map issue.
 
-Both modes leave their changes uncommitted for review.
+Setup leaves its changes uncommitted for review. Land ends in an open pull request.
 
 ## Setup
 
@@ -51,4 +51,8 @@ Setup is done when no `{placeholder}` remains, every page is reachable from `doc
 
 1. Read `docs/agents/domain.md`. When it lacks a `## Land a finished effort` section, add that section from [the schema](assets/docs/agents/domain.md) first and tell the user.
 2. Follow that section for the named effort, through to its completion criterion.
-3. Report the ledger: each line of the map's Decisions so far with where it went (ADR, architecture page, or dropped, with the reason), and each research file with its new path.
+3. **Open the pull request.** Commit the landing on a new branch with the `commit` skill, push it, and open a pull request whose body you write with the `pr` skill. The body carries the ledger: each line of the map's Decisions so far with where it went (ADR, architecture page, or dropped, with the reason), and each research file with its new path.
+4. **Delete the incorporated research branches.** Once the pull request is open, delete each `research/<name>` branch whose investigation step 2 copied into `research/`, both locally and on the remote. Their content now lives in the pull request's commit.
+5. **Report** the pull request link and the deleted branches.
+
+Landing is done when the pull request is open with the full ledger and no incorporated research branch remains locally or on the remote.

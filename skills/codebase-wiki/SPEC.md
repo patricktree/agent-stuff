@@ -18,13 +18,13 @@ Out of scope:
 - Choosing or setting up the issue tracker, triage labels or the glossary format, which `setup-matt-pocock-skills` and `domain-modeling` own.
 - Docs search tooling. A repository adds it once the index stops being enough, as `cup` did with `tooling/docs-search`.
 - Running health reviews and compaction, which the installed schema describes for any session.
-- Committing, branching or pushing.
+- Committing, branching or pushing during setup.
 
 ## Runtime Contract
 
 - Invocation: manual only (`disable-model-invocation: true`; `agents/openai.yaml` for Codex). Setup is a deliberate, once-per-repository act, and landing happens at a point the user chooses.
 - Input: `setup` (default) or `land <effort>`.
-- Output: uncommitted changes and a report; for landing, a ledger of where each decision and research file went.
+- Output: for setup, uncommitted changes and a report; for landing, an open pull request whose body is the ledger of where each decision and research file went, with the incorporated `research/<name>` branches deleted locally and on the remote.
 - The schema asset is the single source of the maintenance and landing rules. `SKILL.md` installs it and defers to it, so a repository's copy keeps working without this skill.
 
 ## Dependencies
@@ -32,6 +32,7 @@ Out of scope:
 - `setup-matt-pocock-skills` (third-party) writes the seed `docs/agents/domain.md` that the schema extends, and `docs/agents/issue-tracker.md` with its `## Wayfinding operations` section.
 - `domain-modeling` (third-party) owns `GLOSSARY.md` and the ADR format and test; the schema refers to it by name.
 - `wayfinder` (third-party) produces the efforts that landing retires.
+- `commit` and `pr` for the landing commit and pull request body.
 - `write-markdown` for validation in repositories without a docs check.
 
 ## Maintenance Notes
